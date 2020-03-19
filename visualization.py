@@ -21,12 +21,14 @@ airport_list = ['JFK', 'EWR', 'LGA',
                 'SFO', 'SJC', 'OAK',
                 'MIA', 'FLL'
                ]
+FIG_SIZE = (30,20)
 
 
 def plot_risks(df):
     print("Plotting risks")
-    cm = plt.cm.plasma
+    # cm = plt.cm.plasma
     cm = plt.cm.coolwarm
+    fig = plt.figure(figsize=FIG_SIZE)
     ax = plt.axes(projection=ccrs.PlateCarree())
     ax.scatter(df.origin_lon, 
                df.origin_lat,
@@ -49,6 +51,7 @@ def plot_risks(df):
     
 def plot_geodesics(df):
     print("Plotting geodesics")
+    fig = plt.figure(figsize=FIG_SIZE)
     ax = plt.axes(projection=ccrs.PlateCarree())
     #ax.stock_img()
 
@@ -57,13 +60,14 @@ def plot_geodesics(df):
     ax.add_feature(cfeature.COASTLINE)
     ax.add_feature(cfeature.BORDERS)
     ax.add_feature(cfeature.STATES)
+    mx = df.Prediction.max()
+    df = df.assign(opacity=np.maximum(df.Prediction.values, 1000*np.ones(len(df)))/mx)
+    lines = plt.plot(df[['origin_lon', 'dest_lon']].T,
+                     df[['origin_lat', 'dest_lat']].T, 
+                     color='r',
+                     transform=ccrs.Geodetic())
+    [line.set_alpha(alpha) for alpha, line in zip(df.opacity, lines)]
 
-
-    plt.plot(df[['origin_lon', 'dest_lon']].T,
-             df[['origin_lat', 'dest_lat']].T,
-             alpha=0.05, 
-             color='r',
-             transform=ccrs.Geodetic())
     plt.tight_layout()
     plt.savefig('./pix/geodesics.png')
     plt.close('all')
@@ -73,7 +77,7 @@ def plot_airports(airports, density):
     print("Plotting airports")
     vis = airports.loc[airport_list]
     dd = np.log(1+density)
-    fig, ax= plt.subplots(1,1, figsize=(30,20))
+    fig, ax= plt.subplots(1,1, figsize=FIG_SIZE)
     im = ax.imshow(dd, cmap=cm.gray)
     #fig.colorbar(im, ax=ax)
     ax.scatter(vis.col_left, vis.row, label='Window', color='b')
@@ -97,7 +101,7 @@ def plot_airports(airports, density):
 def plot_density(density):
     print("Plotting density")
     dd = np.log(1+density)
-    fig, ax= plt.subplots(1,1, figsize=(30,20))
+    fig, ax= plt.subplots(1,1, figsize=FIG_SIZE)
     im = ax.imshow(dd, cmap=cm.gray)
     plt.savefig('./pix/density.png')
     plt.close('all')
@@ -112,9 +116,10 @@ def plot_p_outbreak(n=5):
     Rs[0] = 4
 
     for kappa, R in zip(kappas, Rs):
-        f, zero = loaders.p_outbreak(kappa, R)
-        plt.plot(p, f(p), label='kappa={:2.1f}, R={:2.1f}, p={:2.3f}'.format(kappa, R, zero))
-        plt.scatter(zero, 0)
+        g = partial(loaders.f, kappa=kappa, R=R)
+        root =  fsolve(g, x0=np.array(0.99))[0], g
+        plt.plot(p, g(p), label='kappa={:2.1f}, R={:2.1f}, p={:2.3f}'.format(kappa, R, root))
+        plt.scatter(root, 0)
     
     plt.legend(fontsize=14)
     plt.suptitle("Plots of $f(p) = (1-p)( 1 + pR / \kappa)^{\kappa} - 1$", fontsize=22)

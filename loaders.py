@@ -8,11 +8,9 @@ from functools import partial
 from geography import augment
 
 f = lambda p, kappa, R: (1-p) * np.power(1 + p * R / kappa, kappa) - 1
-def p_outbreak(kappa, R):
-    g = partial(f, kappa=kappa, R=R)
-    return g, fsolve(g, x0=np.array(0.99))[0]
-
-
+def p_outbreak(kappa, n=1):
+    return lambda R: 1 - (1 - (fsolve(lambda p: f(p, kappa, R), x0=np.array(0.99))[0]))**n
+    
 def process(n, filename):
     line = gl(filename, n).replace('\n','').split(' ')
     return line[0], line[-1]
@@ -27,6 +25,7 @@ def load_density():
     specs = {k:float(v) for k,v in map(f,range(1,7))}
     specs['data'] = data
     return specs
+
 
 def load_airports(specs, n=1, kappa=1, wuhan_R0=4):
     airports = pd.read_csv('data/AirportInfo.csv')
@@ -51,3 +50,16 @@ def load_travel(airports):
     datas = {month: data for month, data in travel.groupby('Month')}
     datas['annual'] = annual
     return datas
+
+
+if __name__ == '__main__':
+    kappas = [1, 1, 1, 1, 1, 2]
+    Rs     = [3, 4, 5, 2, 3, 2]
+    ns     = [1, 1, 1, 2, 2, 1]
+
+    for kappa, R, n in zip(kappas, Rs, ns):
+        p = p_outbreak(kappa, n=n)(R)
+        print(f'P(outbreak|R={R}, n={n}, kappa={kappa}) = {p:2.3f}') 
+
+
+
