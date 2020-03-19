@@ -24,7 +24,7 @@ airport_list = ['JFK', 'EWR', 'LGA',
 FIG_SIZE = (30,20)
 
 
-def plot_risks(df):
+def plot_risks(df, kappa=1, n=1):
     print("Plotting risks")
     # cm = plt.cm.plasma
     cm = plt.cm.coolwarm
@@ -32,7 +32,7 @@ def plot_risks(df):
     ax = plt.axes(projection=ccrs.PlateCarree())
     ax.scatter(df.origin_lon, 
                df.origin_lat,
-               color = cm(df.red.values))
+               color = cm(df.risk_i))
     ax.add_feature(cfeature.LAND)
     ax.add_feature(cfeature.OCEAN)
     ax.add_feature(cfeature.COASTLINE)
@@ -45,7 +45,8 @@ def plot_risks(df):
     sm._A = []
     cb = plt.colorbar(sm, orientation='horizontal')
     plt.tight_layout()
-    plt.savefig('./pix/risks.png')
+    plt.suptitle(f"Risk of Outbreak, Iintroducing {n} Infected Individuals ($\kappa={kappa}$)", fontsize=33)
+    plt.savefig(f'./pix/risks_n{n}_kappa{kappa}.png')
     plt.close('all')
 
     
@@ -69,6 +70,7 @@ def plot_geodesics(df):
     [line.set_alpha(alpha) for alpha, line in zip(df.opacity, lines)]
 
     plt.tight_layout()
+    plt.suptitle('Weighted flight connectivity', fontsize=33)
     plt.savefig('./pix/geodesics.png')
     plt.close('all')
 
@@ -90,10 +92,11 @@ def plot_airports(airports, density):
 
     for _, row in vis.iterrows():
         ax.annotate(row['NodeName'] + ' airport', (row['col']+1, row['row']), color='r', fontsize=15)
-        ax.annotate('Density= ' + str(int(row['density'])) + ' ' + row['NodeName'], (row['col_max']+1, row['row_max']), color='g', fontsize=15)
+        ax.annotate('Density= ' + str(int(row['density'])), (row['col_max']+1, row['row_max']), color='g', fontsize=15)
     
     plt.legend()
     plt.tight_layout()
+    plt.suptitle("World Density and Selected Airports with Associated Population Centers", fontsize=33)
     plt.savefig('./pix/airports.png')
     plt.close('all')
 
@@ -103,6 +106,7 @@ def plot_density(density):
     dd = np.log(1+density)
     fig, ax= plt.subplots(1,1, figsize=FIG_SIZE)
     im = ax.imshow(dd, cmap=cm.gray)
+    plt.suptitle("World Density", fontsize=33)
     plt.savefig('./pix/density.png')
     plt.close('all')
         
@@ -121,7 +125,7 @@ def plot_p_outbreak(n=5):
         plt.plot(p, g(p), label='kappa={:2.1f}, R={:2.1f}, p={:2.3f}'.format(kappa, R, root))
         plt.scatter(root, 0)
     
-    plt.legend(fontsize=14)
+    plt.legend(fontsize=33)
     plt.suptitle("Plots of $f(p) = (1-p)( 1 + pR / \kappa)^{\kappa} - 1$", fontsize=22)
     plt.hlines(y=0, xmin=0, xmax=1)
     plt.xlabel('p')

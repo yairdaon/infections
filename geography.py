@@ -3,7 +3,6 @@ import math
 import pdb
 
 
-
 RADIUS = 6371
 
 def deg_dist_at_lat(lat): ## Latitude in degrees!
@@ -111,26 +110,3 @@ def augment(lon, lat, specs, scan=30, avg=15): #resolution in degrees
     assert ret['col_max'] <= ret['col_right'] and ret['col_max'] >= ret['col_left'], pt(ret)
     
     return ret
-
-
-def augment_travel(travel, airports):
-    airport_p_outbreak = dict(zip(airports.index, airports.p_outbreak))
-    travel = travel.assign(origin_p_outbreak=travel.Origin.map(airport_p_outbreak),
-                           dest_p_outbreak=travel.Dest.map(airport_p_outbreak))
-    travel.dropna()
-    travel['outgoing_total'] = travel.groupby('Origin').Prediction.transform('sum')
-    travel = travel.query('outgoing_total > 0')
-
-    travel['P_ij'] = travel.Prediction / travel.outgoing_total
-    travel['risk_ij'] = travel.P_ij - travel.P_ij * travel.dest_p_outbreak
-    travel['risk_i'] = travel.groupby('Origin').risk_ij.transform('sum')
-    travel['origin_lon'] = travel.Origin.replace(airports.Lon)
-    travel['origin_lat'] = travel.Origin.replace(airports.Lat)
-    travel['dest_lon'] = travel.Dest.replace(airports.Lon)
-    travel['dest_lat'] = travel.Dest.replace(airports.Lat)
-    travel['red'] = travel.risk_i.clip(lower=0, upper=1)
-    travel['blue'] = (1 - travel.risk_i).clip(lower=0,upper=1)
-    travel['green'] = 0
-    assert np.max(np.abs(travel.groupby('Origin').P_ij.sum()-1)) < 1e-9
-    return travel
-
