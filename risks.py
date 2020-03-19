@@ -23,8 +23,8 @@ def main(debug: ("Debug mode", 'flag', 'd')):
     valid = airports.NodeName.values
     travel['annual'] = travel['annual'].query('Origin in @valid and Dest in @valid')
     
-    kappas = [1, 1, 2, 5]
-    infected = [1, 2, 1, 1]
+    kappas   = [1, 1, 2, 3, 4, 5, 6]
+    infected = [1, 2, 1, 1, 1, 1, 1]
     if debug:
         kappas = kappas[:1]
         infectved = infected[:1]

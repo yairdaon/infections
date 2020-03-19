@@ -45,8 +45,36 @@ def plot_risks(df, kappa=1, n=1):
     sm._A = []
     cb = plt.colorbar(sm, orientation='horizontal')
     plt.tight_layout()
-    plt.suptitle(f"Risk of Outbreak, Introducing {n} Infected Individual(s) ($\kappa={kappa}$)", fontsize=33)
+    title = f"Risk of Outbreak, Introducing {n} Infected Individual(s) ($\kappa={kappa}$)"
+    plt.suptitle(title, fontsize=33)
     plt.savefig(f'./pix/risks_n{n}_kappa{kappa}.png')
+    plt.close('all')
+
+    df = df.query('Origin == "WUH"')
+    fig = plt.figure(figsize=FIG_SIZE)
+    ax = plt.axes(projection=ccrs.PlateCarree())
+    ax.set_extent([40, 150, -20, 85], crs=ccrs.PlateCarree())
+    ax.scatter(df.dest_lon, 
+               df.dest_lat,
+               color = cm(df.risk_ij))
+    plt.scatter(df.origin_lon.iloc[0],
+                df.origin_lat.iloc[0],
+                color='k')
+    ax.add_feature(cfeature.LAND)
+    ax.add_feature(cfeature.OCEAN)
+    ax.add_feature(cfeature.COASTLINE)
+    ax.add_feature(cfeature.BORDERS)
+    ax.add_feature(cfeature.STATES)
+    ax.set_xticklabels([])
+    ax.set_yticklabels([])
+
+    sm = plt.cm.ScalarMappable(cmap=cm)
+    sm._A = []
+    cb = plt.colorbar(sm, orientation='horizontal')
+    plt.tight_layout()
+    title = f"Risk of Outbreak, Introducing {n} Infected Individual(s) at WUH ($\kappa={kappa}$)"
+    plt.suptitle(title, fontsize=33)
+    plt.savefig(f'./pix/wuhan_risks_n{n}_kappa{kappa}.png')
     plt.close('all')
 
     
@@ -97,8 +125,8 @@ def plot_airports(airports, density):
     plt.legend()
     plt.tight_layout()
     plt.suptitle("World Density and Selected Airports with Associated Population Centers", fontsize=33)
-    plt.savefig('./pix/airports.png')
-    plt.close('all')
+    # plt.savefig('./pix/airports.png')
+    # plt.close('all')
 
     
 def plot_density(density):

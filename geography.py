@@ -23,28 +23,32 @@ def get_coordinate_functions(specs):
 
     def longitude2idx(lon):
         lon = np.array(lon)
-        #assert np.all(lon >= xll)
         return ((lon - xll)/cellsize).astype(int)
+
+    def col2lon(col):
+        return col * cellsize + xll
+
     def latitude2idx(lat):
         lat = np.array(lat)
-        #assert np.all(lat >= yll)
         return (nrows - (lat - yll)/cellsize).astype(int)
+
+    def row2lat(row):
+        return (nrows - row) * cellsize + yll
+  
     specs['lon_f'] = longitude2idx
-    specs['lat_f'] =  latitude2idx
+    specs['lat_f'] = latitude2idx
+    specs['row_g'] = row2lat
+    specs['col_g'] = col2lon
+    
     return specs
-
-
-def row2lat(row, specs):
-    nrows = specs['nrows']
-    yll = specs['yllcorner']
-    cellsize = specs['cellsize']
-    return (nrows - row) * cellsize + yll
 
 
 def augment(lon, lat, specs, scan=30, avg=15): #resolution in degrees
     data = specs['data']
     lon_f = specs['lon_f']
     lat_f = specs['lat_f']
+    row_g = specs['row_g']
+    col_g = specs['col_g']
     cellsize = specs['cellsize']
     n_rows = specs['nrows']
     n_cols = specs['ncols']
@@ -70,9 +74,13 @@ def augment(lon, lat, specs, scan=30, avg=15): #resolution in degrees
     col_max = col - horz_window + idx[1]
     assert row_max in row_ran, f'{row_max} not in {row_ran}'
     assert col_max in col_ran, f'{col_max} not in {col_ran}'
+    lon_max = col_g(col_max)
+    lat_max = row_g(row_max)
+    # assert lon_f(lon_max) == col_max, f'{lon_f(lon_max)} != {col_max}'
+    # assert lat_f(lat_max) == row_max, f'{lat_f(lat_max)} != {row_max}'
+    # print(f'({lon_f(lon_max)}, {col_max})', f'({lat_f(lat_max)}, {row_max})')
     
-    
-    horz_pixel = deg_dist_at_lat(row2lat(row, specs)) * cellsize
+    horz_pixel = deg_dist_at_lat(specs['row_g'](row)) * cellsize
     vert_pixel = deg_dist_at_lat(0) * cellsize
     horz_window_avg = int(avg / horz_pixel)
     vert_window_avg = int(avg / vert_pixel)
@@ -92,6 +100,8 @@ def augment(lon, lat, specs, scan=30, avg=15): #resolution in degrees
         'density': density, 
         'row_max': row_max,
         'col_max': col_max,
+        'lon_max': lon_max,
+        'lat_max': lat_max,
         'vert_window': vert_window,
         'horz_window': horz_window, 
         'vert_window_avg': vert_window_avg,
