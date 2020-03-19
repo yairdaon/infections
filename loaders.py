@@ -78,9 +78,9 @@ def calculate_outbreaks(airports, kappa, n):
 
 
 if __name__ == '__main__':
-    kappas = [1, 1, 1, 1, 1, 2]
-    Rs     = [3, 4, 5, 2, 3, 2]
-    ns     = [1, 1, 1, 2, 2, 1]
+    kappas = [1, 1, 1, 1, 1, 1, 1, 2]
+    Rs     = [1, 2, 3, 4, 5, 2, 3, 2]
+    ns     = [1, 1, 1, 1, 1, 2, 2, 1]
 
     for kappa, R, n in zip(kappas, Rs, ns):
         p = p_outbreak(kappa, n=n)(R)

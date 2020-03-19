@@ -45,7 +45,7 @@ def plot_risks(df, kappa=1, n=1):
     sm._A = []
     cb = plt.colorbar(sm, orientation='horizontal')
     plt.tight_layout()
-    plt.suptitle(f"Risk of Outbreak, Iintroducing {n} Infected Individuals ($\kappa={kappa}$)", fontsize=33)
+    plt.suptitle(f"Risk of Outbreak, Introducing {n} Infected Individual(s) ($\kappa={kappa}$)", fontsize=33)
     plt.savefig(f'./pix/risks_n{n}_kappa{kappa}.png')
     plt.close('all')
 
@@ -106,7 +106,8 @@ def plot_density(density):
     dd = np.log(1+density)
     fig, ax= plt.subplots(1,1, figsize=FIG_SIZE)
     im = ax.imshow(dd, cmap=cm.gray)
-    plt.suptitle("World Density", fontsize=33)
+    plt.suptitle("log(1 + Density)", fontsize=33)
+    plt.tight_layout()
     plt.savefig('./pix/density.png')
     plt.close('all')
         
@@ -132,6 +133,3 @@ def plot_p_outbreak(n=5):
     plt.ylabel('f')
     plt.savefig('./pix/p_outbreak.png')
     plt.close('all')
-
-
-    ## Old code for plotting a panel of monthly infection risk.
