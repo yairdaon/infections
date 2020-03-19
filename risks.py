@@ -25,6 +25,9 @@ def main(debug: ("Debug mode", 'flag', 'd')):
     
     kappas = [1, 1, 2, 5]
     infected = [1, 2, 1, 1]
+    if debug:
+        kappas = kappas[:1]
+        infectved = infected[:1]
     for kappa, n in zip(kappas, infected):
         airports = loaders.calculate_outbreaks(airports, kappa=kappa, n=n)
         travel['annual'] = loaders.augment_travel(travel['annual'], airports)
