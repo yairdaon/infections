@@ -14,14 +14,14 @@ def main():
     specs = loaders.load_density()
     specs = geography.get_coordinate_functions(specs)
     airports = loaders.load_airports(specs)
-    # vis.show_airports(airports, specs['data'])
 
     travel = loaders.load_travel(airports)
     travel = geography.augment_travel(travel['annual'], airports)
-    #travel = {time: augment_travel(df, airports) for time, df in travel.items()}
+    # travel = {time: augment_travel(df, airports) for time, df in travel.items()}
+    vis.plot_airports(airports, specs['data'])
     vis.plot_geodesics(travel)
     vis.plot_risks(travel)
-    
+    vis.plot_density(specs['data'])
     
 if __name__ == '__main__':
     try:

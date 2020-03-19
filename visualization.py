@@ -6,8 +6,8 @@ import cartopy.crs as ccrs
 import cartopy.feature as cfeature
 from matplotlib import gridspec
 
-import loaders
 
+import loaders
 
 airport_list = ['JFK', 'EWR', 'LGA',
                 'PUQ', 
@@ -24,10 +24,13 @@ airport_list = ['JFK', 'EWR', 'LGA',
 
 
 def plot_risks(df):
+    print("Plotting risks")
+    cm = plt.cm.plasma
+    cm = plt.cm.coolwarm
     ax = plt.axes(projection=ccrs.PlateCarree())
     ax.scatter(df.origin_lon, 
                df.origin_lat,
-               color = df[['red', 'green', 'blue']].values)
+               color = cm(df.red.values))
     ax.add_feature(cfeature.LAND)
     ax.add_feature(cfeature.OCEAN)
     ax.add_feature(cfeature.COASTLINE)
@@ -35,9 +38,17 @@ def plot_risks(df):
     ax.add_feature(cfeature.STATES)
     ax.set_xticklabels([])
     ax.set_yticklabels([])
-    plt.show()
 
+    sm = plt.cm.ScalarMappable(cmap=cm)
+    sm._A = []
+    cb = plt.colorbar(sm, orientation='horizontal')
+    plt.tight_layout()
+    plt.savefig('./pix/risks.png')
+    plt.close('all')
+
+    
 def plot_geodesics(df):
+    print("Plotting geodesics")
     ax = plt.axes(projection=ccrs.PlateCarree())
     #ax.stock_img()
 
@@ -54,10 +65,12 @@ def plot_geodesics(df):
              color='r',
              transform=ccrs.Geodetic())
     plt.tight_layout()
-    plt.show()
+    plt.savefig('./pix/geodesics.png')
+    plt.close('all')
 
-
-def show_airports(airports, density):
+    
+def plot_airports(airports, density):
+    print("Plotting airports")
     vis = airports.loc[airport_list]
     dd = np.log(1+density)
     fig, ax= plt.subplots(1,1, figsize=(30,20))
@@ -77,8 +90,39 @@ def show_airports(airports, density):
     
     plt.legend()
     plt.tight_layout()
-    plt.show()
+    plt.savefig('./pix/airports.png')
+    plt.close('all')
+
+    
+def plot_density(density):
+    print("Plotting density")
+    dd = np.log(1+density)
+    fig, ax= plt.subplots(1,1, figsize=(30,20))
+    im = ax.imshow(dd, cmap=cm.gray)
+    plt.savefig('./pix/density.png')
+    plt.close('all')
+        
+    
+def plot_p_outbreak(n=5):
+    print("Plotting probility of outbreak function")
+    p = np.linspace(0, 1, num=10**5)
+    kappas = np.random.normal(loc=2.5, scale=0.5, size=n)
+    Rs = np.random.normal(loc=4, scale=1, size=n)
+    kappas[0] = 1
+    Rs[0] = 4
+
+    for kappa, R in zip(kappas, Rs):
+        f, zero = loaders.p_outbreak(kappa, R)
+        plt.plot(p, f(p), label='kappa={:2.1f}, R={:2.1f}, p={:2.3f}'.format(kappa, R, zero))
+        plt.scatter(zero, 0)
+    
+    plt.legend(fontsize=14)
+    plt.suptitle("Plots of $f(p) = (1-p)( 1 + pR / \kappa)^{\kappa} - 1$", fontsize=22)
+    plt.hlines(y=0, xmin=0, xmax=1)
+    plt.xlabel('p')
+    plt.ylabel('f')
+    plt.savefig('./pix/p_outbreak.png')
+    plt.close('all')
 
 
-
-## Old code for plotting a panel of monthly infection risk.
+    ## Old code for plotting a panel of monthly infection risk.

@@ -88,21 +88,21 @@ def augment(lon, lat, specs, scan=30, avg=15): #resolution in degrees
    
     
     ret = {
+        'row': row,
+        'col': col,
+        'density': density, 
+        'row_max': row_max,
+        'col_max': col_max,
         'vert_window': vert_window,
         'horz_window': horz_window, 
         'vert_window_avg': vert_window_avg,
         'horz_window_avg': horz_window_avg, 
-        'row': row,
-        'col': col,
-        'row_max': row_max,
-        'col_max': col_max,
         'row_top': row + vert_window,
         'row_bottom': row - vert_window,
         'col_left': col - horz_window,
         'col_right': col + horz_window,
         'horz_pixel': horz_pixel,
         'vert_pixel': vert_pixel,
-        'density': density, 
         'idx': idx,
         'shape': shape,
     }
