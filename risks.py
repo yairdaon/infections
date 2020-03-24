@@ -1,8 +1,3 @@
-import numpy as np
-import pandas as pd
-import os
-import pickle
-import math
 import pdb
 
 import loaders
@@ -11,14 +6,19 @@ import visualization as vis
 
 
 def main(debug: ("Debug mode", 'flag', 'd')):
+    # vis.plot_p_outbreak()
+    print('Loading density')
     specs = loaders.load_density()
+    print('calculating coordinate functions')
     specs = geography.get_coordinate_functions(specs)
+    vis.plot_density(specs)
+    print('loading airport data')
     airports = loaders.load_airports(specs)
     if debug:
         airports = airports.loc[vis.airport_list]
     vis.plot_airports(airports, specs['data'])
-    vis.plot_density(specs['data'])
-    
+    vis.plot_R0(airports)
+
     travel = loaders.load_travel(airports)
     valid = airports.NodeName.values
     travel['annual'] = travel['annual'].query('Origin in @valid and Dest in @valid')
@@ -30,12 +30,15 @@ def main(debug: ("Debug mode", 'flag', 'd')):
         infectved = infected[:1]
     for kappa, n in zip(kappas, infected):
         airports = loaders.calculate_outbreaks(airports, kappa=kappa, n=n)
-        travel['annual'] = loaders.augment_travel(travel['annual'], airports)
-        # travel = {time: augment_travel(df, airports) for time, df in travel.items()}
-        vis.plot_risks(travel['annual'], n=n, kappa=kappa)
-    
-    vis.plot_geodesics(travel['annual'])
-
+        for time, df in travel.items():
+            if time not in ['annual']:
+                continue
+            tmp = loaders.augment_travel(travel['annual'], airports)
+            vis.plot_risks(tmp, n=n, kappa=kappa)
+     
+        
+    vis.plot_geodesics(tmp)
+   
     
 if __name__ == '__main__':
     try:
