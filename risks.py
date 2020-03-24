@@ -30,7 +30,7 @@ def main(debug: ("Debug mode", 'flag', 'd')):
         travel['annual'] = travel['annual'].query('Origin in @valid and Dest in @valid')
 
         kappas   = [1, 2, 3, 4, 5, 6]
-        infected = [1, 2]
+        infected = [1, 2, 3]
         if debug:
             kappas = kappas[:1]
             infectved = infected[:1]
@@ -43,7 +43,7 @@ def main(debug: ("Debug mode", 'flag', 'd')):
                 vis.plot_risks(tmp, n=n, kappa=kappa, wuhan_R0=wuhan_R0)
 
 
-        vis.plot_geodesics(tmp)
+    vis.plot_geodesics(tmp)
    
     
 if __name__ == '__main__':
