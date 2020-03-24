@@ -27,7 +27,7 @@ def load_density():
     return specs
 
 
-def load_airports(specs, n=1, kappa=1, wuhan_R0=4):
+def load_airports(specs, wuhan_R0=4):
     airports = pd.read_csv('data/AirportInfo.csv')
     g = lambda lat, lon: augment(lon=lon, lat=lat, specs=specs)
     airports = [{**row, **g(lat=row['Lat'], lon=row['Lon'])} for _, row in airports.iterrows()]

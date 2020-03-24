@@ -31,6 +31,7 @@ TICK_FONT_SIZE = 16
 
 def plot_R0(df):
     print('Plotting R0')
+    wuhan_R0 = df.loc['WUH', 'R0']
     cm = plt.cm.coolwarm
     fig = plt.figure(figsize=FIG_SIZE)
     ax = plt.axes(projection=ccrs.PlateCarree())
@@ -50,16 +51,16 @@ def plot_R0(df):
     sm._A = []
     cb = plt.colorbar(sm, orientation='horizontal')
     cb.ax.tick_params(labelsize=TICK_FONT_SIZE)
-
+    
     title = f"Basic Reproductive Number $R_0$"
     plt.suptitle(title, fontsize=33)
     plt.tight_layout()
-    plt.savefig(f'./pix/R0.png')
+    plt.savefig(f'./pix/R0_wuhan{wuhan_R0}.png')
     plt.close('all')
 
     
     
-def plot_risks(df, kappa=1, n=1):
+def plot_risks(df, kappa=1, n=1, wuhan_R0=4):
     print("Plotting risks")
     # cm = plt.cm.plasma
     cm = plt.cm.coolwarm
@@ -79,10 +80,10 @@ def plot_risks(df, kappa=1, n=1):
     sm = plt.cm.ScalarMappable(cmap=cm)
     sm._A = []
     cb = plt.colorbar(sm, orientation='horizontal')
-    title = f"Risk of Outbreak, Introducing {n} Infected Individual(s) ($\kappa={kappa}$)"
+    title = f"Risk of Outbreak, Introducing {n} Infected Individual(s) ($\kappa={kappa}$, wuhan_R0={wuhan_R0})"
     plt.suptitle(title, fontsize=33)
     plt.tight_layout()
-    plt.savefig(f'./pix/risks_n{n}_kappa{kappa}.png')
+    plt.savefig(f'./pix/risks_n{n}_kappa{kappa}_wuhan{wuhan_R0}.png')
     plt.close('all')
 
     df = df.query('Origin == "WUH"')
@@ -107,10 +108,10 @@ def plot_risks(df, kappa=1, n=1):
         sm = plt.cm.ScalarMappable(cmap=cm)
         sm._A = []
         cb = plt.colorbar(sm, orientation='horizontal')
-        title = f"Risk of Outbreak, Introducing {n} Infected Individual(s) at WUH ($\kappa={kappa}$)"
+        title = f"Risk of Outbreak, Introducing {n} Infected Individual(s) at WUH ($\kappa={kappa}$, wuhan_R0={wuhan_R0})"
         plt.suptitle(title, fontsize=33)
         plt.tight_layout()
-        plt.savefig(f'./pix/wuhan_risks_n{n}_kappa{kappa}.png')
+        plt.savefig(f'./pix/wuhan_risks_n{n}_kappa{kappa}_wuhan{wuhan_R0}.png')
         plt.close('all')
 
     
