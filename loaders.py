@@ -54,12 +54,13 @@ def load_travel(airports):
     return datas
 
 
-def augment_travel(travel, airports):
+def augment_travel(travel, airports, destinations):
     airport_p_outbreak = dict(zip(airports.index, airports.p_outbreak))
-    travel = travel.assign(dest_p_outbreak=travel.Dest.map(airport_p_outbreak))
-    travel.dropna()
-    travel['outgoing_total'] = travel.groupby('Origin').Prediction.transform('sum')
-    travel = travel.query('outgoing_total > 0')
+    travel = travel.query("Dest in @destinations")
+    assert len(travel) > 0
+    travel = travel.assign(dest_p_outbreak=travel.Dest.map(airport_p_outbreak),
+                           outgoing_total=travel.groupby('Origin').Prediction.transform('sum'))
+    travel = travel.query('outgoing_total > 0').dropna()
     travel['P_ij'] = travel.Prediction / travel.outgoing_total
     travel['risk_ij'] = travel.P_ij * travel.dest_p_outbreak
     travel['risk_i'] = travel.groupby('Origin').risk_ij.transform('sum').clip(lower=0, upper=1)

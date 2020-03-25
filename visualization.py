@@ -162,12 +162,12 @@ def plot_annual_risks(df, kappa=1, n=1, wuhan_R0=4, region='global'):
     #     plt.close('all')
 
     
-def plot_geodesics(df, region='global'):
+def plot_geodesics(df, destinations, region):
     print("Plotting geodesics")
+    df = df.query('Dest in @destinations')
     fig = plt.figure(figsize=FIG_SIZE)
     ax = plt.axes(projection=ccrs.PlateCarree())
     _add_features(ax)
-    
     ax.set_xlim(-180,180)
     ax.set_ylim(-90,90)
 
