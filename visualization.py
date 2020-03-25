@@ -38,7 +38,8 @@ airport_list = ['JFK', 'EWR', 'LGA', #NYC
                 #'MIA', 'FLL' #Miami
                ]
 
-FIG_SIZE=(20,10)
+FIG_SIZE=np.array([20,10])
+CB_SIZE=np.array([4,1])
 TICK_FONT_SIZE=16
 QUALITY=95
 DPI=400
@@ -86,9 +87,9 @@ def plot_monthly_risks(travel, kappa=1, n=1, wuhan_R0=4, region='global'):
 
 def plot_R0(df):
     print('Plotting R0')
-    wuhan_R0 = df.loc['WUH', 'R0']
+    wuhan_R0 = int(df.loc['WUH', 'R0'])
     cm = plt.cm.coolwarm
-    fig = plt.figure(figsize=FIG_SIZE)
+    fig = plt.figure(figsize=FIG_SIZE+CB_SIZE)
     ax = plt.axes(projection=ccrs.PlateCarree())
     ax.scatter(df.Lon, 
                df.Lat,
@@ -115,7 +116,7 @@ def plot_annual_risks(df, kappa=1, n=1, wuhan_R0=4, region='global'):
     print("Plotting risks")
     # cm = plt.cm.plasma
     cm = plt.cm.coolwarm
-    fig = plt.figure(figsize=FIG_SIZE)
+    fig = plt.figure(figsize=FIG_SIZE+CB_SIZE)
     ax = plt.axes(projection=ccrs.PlateCarree())
     ax.scatter(df.origin_lon, 
                df.origin_lat,

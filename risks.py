@@ -55,6 +55,7 @@ def main(debug: ("Debug mode", 'flag', 'd')):
     
 
     for region in regions:
+        print()
         print('Making', region, 'plots')
         dest = dest_dict[region]
         vis.plot_geodesics(travel['annual'], destinations=dest, region=region)
