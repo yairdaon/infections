@@ -9,12 +9,24 @@ from matplotlib import gridspec
 from matplotlib.colors import Normalize
 from functools import partial
 from scipy.optimize import fsolve
+import os
 
 import loaders
 
+
+if not os.path.exists('./pix'):
+    os.mkdir('./pix')
+
+
 airport_list = ['JFK', 'EWR', 'LGA', #NYC
-                #'PUQ', 
+                'PUQ', 
+                'HNL', # Hawaii
+                'NRT', # Tokyo
                 'FRA', #Frankfurt
+                'CPT', # Capetown
+                'KEF', # Iceland
+                'EZE', ## Buenos aires
+                'SCL', ## Santiago Chile
                 #'TLV', 'SDV', 
                 'WUH', #Wuhan
                 'ICN', # Seoul
@@ -25,11 +37,50 @@ airport_list = ['JFK', 'EWR', 'LGA', #NYC
                 'SFO', 'SJC', 'OAK', #San Francisco
                 #'MIA', 'FLL' #Miami
                ]
-FIG_SIZE = (30,20)
-TICK_FONT_SIZE = 16
+
+FIG_SIZE=(20,10)
+TICK_FONT_SIZE=16
+QUALITY=95
+DPI=400
 
 
-def plot_R0(df):
+def plot_monthly_risks(travel, kappa=1, n=1, wuhan_R0=4, world=True):
+    def make_it(ax, df, month):
+        ax.scatter(df.origin_lon, df.origin_lat, color=cm.coolwarm(df.risk_i))
+        ax.add_feature(cfeature.BORDERS)
+        ax.add_feature(cfeature.COASTLINE)
+        ax.text(-175, -80, month, fontsize=35, color='r')
+        ax.set_xticklabels([])
+        ax.set_yticklabels([])
+        if world:
+            ax.set_xlim(-180,180)
+            ax.set_ylim(-90,90)
+
+    fig = plt.figure(constrained_layout=True, figsize=FIG_SIZE)
+    gs = fig.add_gridspec(2, 8)
+
+
+    ax1 = fig.add_subplot(gs[0, 0:4], projection=ccrs.PlateCarree())
+    df = travel[1]
+    make_it(ax1, df, 'January')
+
+    ax2 = fig.add_subplot(gs[0, 4:8], projection=ccrs.PlateCarree())
+    df = travel[4]
+    make_it(ax2, df, 'April')
+
+
+    ax3 = fig.add_subplot(gs[1:, 0:4], projection=ccrs.PlateCarree())
+    df = travel[7]
+    make_it(ax3, df, 'July')
+
+    ax4 = fig.add_subplot(gs[1, 4:8], projection=ccrs.PlateCarree())
+    df = travel[10]
+    make_it(ax4, df, 'October')
+    
+    plt.savefig(f'./pix/months_kappa{kappa}_n{n}_wuhan{wuhan_R0}.jpg', quality=QUALITY, dpi=DPI)
+    plt.close('all')
+
+def plot_R0(df, world=True):
     print('Plotting R0')
     wuhan_R0 = df.loc['WUH', 'R0']
     cm = plt.cm.coolwarm
@@ -45,22 +96,25 @@ def plot_R0(df):
     ax.add_feature(cfeature.STATES)
     ax.set_xticklabels([])
     ax.set_yticklabels([])
+    if world:
+        ax.set_xlim(-180,180)
+        ax.set_ylim(-90,90)
 
     norm = Normalize(vmin=0, vmax=df.R0.max())
     sm = plt.cm.ScalarMappable(cmap=cm, norm=norm)
     sm._A = []
-    cb = plt.colorbar(sm, orientation='horizontal')
+    cb = plt.colorbar(sm, orientation='vertical')
     cb.ax.tick_params(labelsize=TICK_FONT_SIZE)
     
     title = f"Basic Reproductive Number $R_0$"
-    plt.suptitle(title, fontsize=33)
+    ## plt.suptitle(title, fontsize=33)
     plt.tight_layout()
-    plt.savefig(f'./pix/R0_wuhan{wuhan_R0}.png')
+    plt.savefig(f'./pix/R0_wuhan{wuhan_R0}.jpg', quality=QUALITY, dpi=DPI)
     plt.close('all')
 
     
     
-def plot_risks(df, kappa=1, n=1, wuhan_R0=4):
+def plot_annual_risks(df, kappa=1, n=1, wuhan_R0=4, world=True):
     print("Plotting risks")
     # cm = plt.cm.plasma
     cm = plt.cm.coolwarm
@@ -76,46 +130,49 @@ def plot_risks(df, kappa=1, n=1, wuhan_R0=4):
     ax.add_feature(cfeature.STATES)
     ax.set_xticklabels([])
     ax.set_yticklabels([])
+    if world:
+        ax.set_xlim(-180,180)
+        ax.set_ylim(-90,90)
 
     sm = plt.cm.ScalarMappable(cmap=cm)
     sm._A = []
-    cb = plt.colorbar(sm, orientation='horizontal')
-    title = f"Risk of Outbreak, Introducing {n} Infected Individual(s) ($\kappa={kappa}$, wuhan_R0={wuhan_R0})"
-    plt.suptitle(title, fontsize=33)
+    cb = plt.colorbar(sm, orientation='vertical')
+    title = f"Risk of Outbreak, Introducing {n} Infected Individual(s) ($\kappa={kappa}, R_0(Wuhan)={wuhan_R0}$)"
+    ## plt.suptitle(title, fontsize=33)
     plt.tight_layout()
-    plt.savefig(f'./pix/risks_n{n}_kappa{kappa}_wuhan{wuhan_R0}.png')
+    plt.savefig(f'./pix/risks_n{n}_kappa{kappa}_wuhan{wuhan_R0}.jpg', quality=QUALITY, dpi=DPI)
     plt.close('all')
 
-    df = df.query('Origin == "WUH"')
-    if len(df) > 0:
-        fig = plt.figure()
-        ax = plt.axes(projection=ccrs.PlateCarree())
-        ax.set_extent([40, 150, -20, 85], crs=ccrs.PlateCarree())
-        ax.scatter(df.dest_lon, 
-                   df.dest_lat,
-                   color = cm(df.risk_ij))
-        plt.scatter(df.origin_lon.iloc[0],
-                    df.origin_lat.iloc[0],
-                    color='k')
-        ax.add_feature(cfeature.LAND)
-        ax.add_feature(cfeature.OCEAN)
-        ax.add_feature(cfeature.COASTLINE)
-        ax.add_feature(cfeature.BORDERS)
-        ax.add_feature(cfeature.STATES)
-        ax.set_xticklabels([])
-        ax.set_yticklabels([])
+    # df = df.query('Origin == "WUH"')
+    # if len(df) > 0:
+    #     fig = plt.figure()
+    #     ax = plt.axes(projection=ccrs.PlateCarree())
+    #     ax.set_extent([40, 150, -20, 85], crs=ccrs.PlateCarree())
+    #     ax.scatter(df.dest_lon, 
+    #                df.dest_lat,
+    #                color = cm(df.risk_ij))
+    #     plt.scatter(df.origin_lon.iloc[0],
+    #                 df.origin_lat.iloc[0],
+    #                 color='k')
+    #     ax.add_feature(cfeature.LAND)
+    #     ax.add_feature(cfeature.OCEAN)
+    #     ax.add_feature(cfeature.COASTLINE)
+    #     ax.add_feature(cfeature.BORDERS)
+    #     ax.add_feature(cfeature.STATES)
+    #     ax.set_xticklabels([])
+    #     ax.set_yticklabels([])
 
-        sm = plt.cm.ScalarMappable(cmap=cm)
-        sm._A = []
-        cb = plt.colorbar(sm, orientation='horizontal')
-        title = f"Risk of Outbreak, Introducing {n} Infected Individual(s) at WUH ($\kappa={kappa}$, wuhan_R0={wuhan_R0})"
-        plt.suptitle(title, fontsize=33)
-        plt.tight_layout()
-        plt.savefig(f'./pix/wuhan_risks_n{n}_kappa{kappa}_wuhan{wuhan_R0}.png')
-        plt.close('all')
+    #     sm = plt.cm.ScalarMappable(cmap=cm)
+    #     sm._A = []
+    #     cb = plt.colorbar(sm, orientation='vertical')
+    #     title = f"Risk of Outbreak, Introducing {n} Infected Individual(s) at WUH ($\kappa={kappa}, R_0(Wuhan)={wuhan_R0})"
+    #     ## plt.suptitle(title, fontsize=33)
+    #     plt.tight_layout()
+    #     plt.savefig(f'./pix/wuhan_risks_n{n}_kappa{kappa}_wuhan{wuhan_R0}.jpg', quality=QUALITY, dpi=DPI)
+    #     plt.close('all')
 
     
-def plot_geodesics(df):
+def plot_geodesics(df, world=True):
     print("Plotting geodesics")
     fig = plt.figure(figsize=FIG_SIZE)
     ax = plt.axes(projection=ccrs.PlateCarree())
@@ -126,6 +183,11 @@ def plot_geodesics(df):
     ax.add_feature(cfeature.COASTLINE)
     ax.add_feature(cfeature.BORDERS)
     ax.add_feature(cfeature.STATES)
+    ax.set_xticklabels([])
+    ax.set_yticklabels([])
+    if world:
+        ax.set_xlim(-180,180)
+        ax.set_ylim(-90,90)
     mx = df.Prediction.max()
     df = df.assign(opacity=np.maximum(df.Prediction.values, 1000*np.ones(len(df)))/mx)
     lines = plt.plot(df[['origin_lon', 'dest_lon']].T,
@@ -135,12 +197,12 @@ def plot_geodesics(df):
     [line.set_alpha(alpha) for alpha, line in zip(df.opacity, lines)]
 
     plt.tight_layout()
-    plt.suptitle('Weighted flight connectivity', fontsize=33)
-    plt.savefig('./pix/geodesics.png')
+    ## plt.suptitle('Weighted flight connectivity', fontsize=33)
+    plt.savefig('./pix/geodesics.jpg', quality=QUALITY, dpi=DPI)
     plt.close('all')
 
     
-def plot_airports(airports, density):
+def plot_airports(airports, density, world=True):
     print("Plotting airports")
     vis = airports.loc[airport_list]
     dd = np.log(1+density)
@@ -150,10 +212,14 @@ def plot_airports(airports, density):
     ax.scatter(vis.col_left, vis.row, label='Window', color='b')
     ax.scatter(vis.col_right, vis.row, color='b')
     ax.scatter(vis.col, vis.row_top, color='b')
-    ax.scatter(vis.col, vis.row_bottom, color='b')
-    
+    ax.scatter(vis.col, vis.row_bottom, color='b')    
     ax.scatter(vis.col, vis.row, label='Airports', color='r')
     ax.scatter(vis.col_max, vis.row_max, label='Maximizers', color='g')
+    ax.set_xticklabels([])
+    ax.set_yticklabels([])
+    if world:
+        ax.set_xlim(-180,180)
+        ax.set_ylim(-90,90)    
 
     for _, row in vis.iterrows():
         ax.annotate(row['NodeName'] + ' airport', (row['col']+1, row['row']), color='r', fontsize=15)
@@ -161,12 +227,12 @@ def plot_airports(airports, density):
     
     plt.legend()
     plt.tight_layout()
-    plt.suptitle("World Density and Selected Airports with Associated Population Centers", fontsize=33)
-    plt.savefig('./pix/airports.png')
+    ## plt.suptitle("World Density and Selected Airports with Associated Population Centers", fontsize=33)
+    plt.savefig('./pix/airports.jpg', quality=QUALITY, dpi=DPI)
     plt.close('all')
 
     
-def plot_density(specs):
+def plot_density(specs, world=True):
     print("Plotting density")
     rows, cols = specs['data'].shape
     cols, rows = np.meshgrid(range(cols), range(rows))
@@ -179,10 +245,15 @@ def plot_density(specs):
     plt.contourf(lons, lats, np.log(1+density),
                  transform=ccrs.PlateCarree(), cmap=cm.gray)# cmap='coolwarm')
     ax.coastlines(color='w')
+    ax.set_xticklabels([])
+    ax.set_yticklabels([])
+    if world:
+        ax.set_xlim(-180,180)
+        ax.set_ylim(-90,90)
 
-    plt.suptitle("log(1 + Density)", fontsize=33)
+    ## plt.suptitle("log(1 + Density)", fontsize=33)
     plt.tight_layout()
-    plt.savefig('./pix/density.png')
+    plt.savefig('./pix/density.jpg', quality=QUALITY, dpi=DPI)
     plt.close('all')
     
     
@@ -201,10 +272,10 @@ def plot_p_outbreak(n=5):
         plt.scatter(root, 0)
     
     plt.legend()
-    plt.suptitle("Plots of $f(p) = (1-p)( 1 + pR / \kappa)^{\kappa} - 1$", fontsize=22)
+    ## plt.suptitle("Plots of $f(p) = (1-p)( 1 + pR / \kappa)^{\kappa} - 1$", fontsize=22)
     plt.hlines(y=0, xmin=0, xmax=1)
     plt.xlabel('p')
     plt.ylabel('f')
     plt.tight_layout()
-    plt.savefig('./pix/p_outbreak.png')
+    plt.savefig('./pix/p_outbreak.jpg', quality=QUALITY, dpi=DPI)
     plt.close('all')

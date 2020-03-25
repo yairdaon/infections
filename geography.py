@@ -13,6 +13,12 @@ def deg_dist_at_lat(lat): ## Latitude in degrees!
 ## Coordinate format: Latitude N , Longitude E.
 ## Longitude / East / x-axis / columns / (-180,180)
 ## latitude / North / y-axis / rows / (-90,90).
+AFRICA_MAX_LAT = (37.277778, 9.863889)[0] ## Bizerte, Tunisia
+AFRICA_WEST_LONG = (14.692778, -17.446667)[1] ##Dakar, Senegal
+AFRICA_EAST_LONG = (10.416667, 51.266667)[1] ##Hafun, Somalia	
+
+def get_africa_airports():
+    df = pd.read_csv('./data/airports.csv')
 
 def get_coordinate_functions(specs):
     cellsize = specs['cellsize']

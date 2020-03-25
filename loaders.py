@@ -9,8 +9,10 @@ from geography import augment
 
 f = lambda p, kappa, R: (1-p) * np.power(1 + p * R / kappa, kappa) - 1
 def p_outbreak(kappa, n=1):
+    ##               1 - (1 - P(major outbreak introducing one infected individual   ))**n
     return lambda R: 1 - (1 - (fsolve(lambda p: f(p, kappa, R), x0=np.array(0.99))[0]))**n
-    
+  
+
 def process(n, filename):
     line = gl(filename, n).replace('\n','').split(' ')
     return line[0], line[-1]
@@ -39,7 +41,7 @@ def load_airports(specs, wuhan_R0=4):
 
 
 def load_travel(airports):
-    filename = 'data/Prediction_Monthly.csv'
+    filename = './data/Prediction_Monthly.csv'
     travel = pd.read_csv(filename)
     nodes = airports.NodeName.values
     travel = travel.query('Origin in @nodes and Dest in @nodes')
@@ -59,7 +61,7 @@ def augment_travel(travel, airports):
     travel = travel.query('outgoing_total > 0')
 
     travel['P_ij'] = travel.Prediction / travel.outgoing_total
-    travel['risk_ij'] = travel.P_ij - travel.P_ij * travel.dest_p_outbreak
+    travel['risk_ij'] = travel.P_ij * travel.dest_p_outbreak
     travel['risk_i'] = travel.groupby('Origin').risk_ij.transform('sum').clip(lower=0, upper=1)
     travel['origin_lon'] = travel.Origin.replace(airports.Lon)
     travel['origin_lat'] = travel.Origin.replace(airports.Lat)

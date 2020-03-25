@@ -7,7 +7,7 @@ import visualization as vis
 
 
 def main(debug: ("Debug mode", 'flag', 'd')):
-    # vis.plot_p_outbreak()
+    vis.plot_p_outbreak()
     print('Loading density')
     specs = loaders.load_density()
 
@@ -15,8 +15,11 @@ def main(debug: ("Debug mode", 'flag', 'd')):
     specs = geography.get_coordinate_functions(specs)
     vis.plot_density(specs)
 
-    
-    for wuhan_R0 in [2, 4, 6, 8]:
+    if debug:
+        R0s = [4]
+    else:
+        R0s = [1, 2, 4, 6]
+    for wuhan_R0 in R0s:
         
         print('loading airport data')
         airports = loaders.load_airports(specs, wuhan_R0=wuhan_R0)
@@ -26,9 +29,8 @@ def main(debug: ("Debug mode", 'flag', 'd')):
         vis.plot_R0(airports)
 
         travel = loaders.load_travel(airports)
-        valid = airports.NodeName.values
-        travel['annual'] = travel['annual'].query('Origin in @valid and Dest in @valid')
-
+        travel = {k: travel[k] for k in ['annual', 1, 4, 7, 10]}
+        
         kappas   = [1, 2, 3, 4, 5, 6]
         infected = [1, 2, 3]
         if debug:
@@ -36,14 +38,11 @@ def main(debug: ("Debug mode", 'flag', 'd')):
             infectved = infected[:1]
         for kappa, n in product(kappas, infected):
             airports = loaders.calculate_outbreaks(airports, kappa=kappa, n=n)
-            for time, df in travel.items():
-                if time not in ['annual']:
-                    continue
-                tmp = loaders.augment_travel(travel['annual'], airports)
-                vis.plot_risks(tmp, n=n, kappa=kappa, wuhan_R0=wuhan_R0)
+            tmp_travel = {k: loaders.augment_travel(df, airports) for k, df in travel.items()}
+            vis.plot_annual_risks(tmp_travel['annual'], n=n, kappa=kappa, wuhan_R0=wuhan_R0)
+            vis.plot_monthly_risks(tmp_travel, kappa=kappa, n=n, wuhan_R0=wuhan_R0)
 
-
-    vis.plot_geodesics(tmp)
+    vis.plot_geodesics(tmp_travel['annual'])
    
     
 if __name__ == '__main__':
@@ -56,4 +55,3 @@ if __name__ == '__main__':
         _, _, tb = sys.exc_info()
         traceback.print_exc()
         pdb.post_mortem(tb)
-    
