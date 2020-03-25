@@ -19,22 +19,22 @@ if not os.path.exists('./pix'):
 
 
 airport_list = ['JFK', 'EWR', 'LGA', #NYC
-                'PUQ', 
-                'HNL', # Hawaii
+                #'PUQ', 
+                #'HNL', # Hawaii
                 'NRT', # Tokyo
                 'FRA', #Frankfurt
                 'CPT', # Capetown
-                'KEF', # Iceland
-                'EZE', ## Buenos aires
+                #'KEF', # Iceland
+                #'EZE', ## Buenos aires
                 'SCL', ## Santiago Chile
                 #'TLV', 'SDV', 
                 'WUH', #Wuhan
                 'ICN', # Seoul
-                #'DEL', 
+                'DEL', 
                 #'CDG', 'ORY', #Paris
                 'LTN', 'LHR', 'LGW', #London
-                'TXL', 'SXF', #Berlin
-                'SFO', 'SJC', 'OAK', #San Francisco
+                #'TXL', 'SXF', #Berlin
+                #'SFO', 'SJC', 'OAK', #San Francisco
                 #'MIA', 'FLL' #Miami
                ]
 
@@ -43,18 +43,22 @@ TICK_FONT_SIZE=16
 QUALITY=95
 DPI=400
 
-
-def plot_monthly_risks(travel, kappa=1, n=1, wuhan_R0=4, world=True):
+def _add_features(ax):
+    ax.add_feature(cfeature.BORDERS)
+    ax.add_feature(cfeature.COASTLINE)
+    ax.set_xticklabels([])
+    ax.set_yticklabels([])
+    return ax
+    
+def plot_monthly_risks(travel, kappa=1, n=1, wuhan_R0=4, region='global'):
     def make_it(ax, df, month):
         ax.scatter(df.origin_lon, df.origin_lat, color=cm.coolwarm(df.risk_i))
-        ax.add_feature(cfeature.BORDERS)
-        ax.add_feature(cfeature.COASTLINE)
+        _add_features(ax)
         ax.text(-175, -80, month, fontsize=35, color='r')
         ax.set_xticklabels([])
         ax.set_yticklabels([])
-        if world:
-            ax.set_xlim(-180,180)
-            ax.set_ylim(-90,90)
+        ax.set_xlim(-180,180)
+        ax.set_ylim(-90,90)
 
     fig = plt.figure(constrained_layout=True, figsize=FIG_SIZE)
     gs = fig.add_gridspec(2, 8)
@@ -77,10 +81,10 @@ def plot_monthly_risks(travel, kappa=1, n=1, wuhan_R0=4, world=True):
     df = travel[10]
     make_it(ax4, df, 'October')
     
-    plt.savefig(f'./pix/months_kappa{kappa}_n{n}_wuhan{wuhan_R0}.jpg', quality=QUALITY, dpi=DPI)
+    plt.savefig(f'./pix/{region}_monthly_risks_kappa{kappa}_n{n}_wuhan{wuhan_R0}.jpg', quality=QUALITY, dpi=DPI)
     plt.close('all')
 
-def plot_R0(df, world=True):
+def plot_R0(df):
     print('Plotting R0')
     wuhan_R0 = df.loc['WUH', 'R0']
     cm = plt.cm.coolwarm
@@ -89,16 +93,9 @@ def plot_R0(df, world=True):
     ax.scatter(df.Lon, 
                df.Lat,
                color = cm(df.R0))
-    ax.add_feature(cfeature.LAND)
-    ax.add_feature(cfeature.OCEAN)
-    ax.add_feature(cfeature.COASTLINE)
-    ax.add_feature(cfeature.BORDERS)
-    ax.add_feature(cfeature.STATES)
-    ax.set_xticklabels([])
-    ax.set_yticklabels([])
-    if world:
-        ax.set_xlim(-180,180)
-        ax.set_ylim(-90,90)
+    _add_features(ax)
+    ax.set_xlim(-180,180)
+    ax.set_ylim(-90,90)
 
     norm = Normalize(vmin=0, vmax=df.R0.max())
     sm = plt.cm.ScalarMappable(cmap=cm, norm=norm)
@@ -114,7 +111,7 @@ def plot_R0(df, world=True):
 
     
     
-def plot_annual_risks(df, kappa=1, n=1, wuhan_R0=4, world=True):
+def plot_annual_risks(df, kappa=1, n=1, wuhan_R0=4, region='global'):
     print("Plotting risks")
     # cm = plt.cm.plasma
     cm = plt.cm.coolwarm
@@ -123,16 +120,9 @@ def plot_annual_risks(df, kappa=1, n=1, wuhan_R0=4, world=True):
     ax.scatter(df.origin_lon, 
                df.origin_lat,
                color = cm(df.risk_i))
-    ax.add_feature(cfeature.LAND)
-    ax.add_feature(cfeature.OCEAN)
-    ax.add_feature(cfeature.COASTLINE)
-    ax.add_feature(cfeature.BORDERS)
-    ax.add_feature(cfeature.STATES)
-    ax.set_xticklabels([])
-    ax.set_yticklabels([])
-    if world:
-        ax.set_xlim(-180,180)
-        ax.set_ylim(-90,90)
+    _add_features(ax)
+    ax.set_xlim(-180,180)
+    ax.set_ylim(-90,90)
 
     sm = plt.cm.ScalarMappable(cmap=cm)
     sm._A = []
@@ -140,7 +130,7 @@ def plot_annual_risks(df, kappa=1, n=1, wuhan_R0=4, world=True):
     title = f"Risk of Outbreak, Introducing {n} Infected Individual(s) ($\kappa={kappa}, R_0(Wuhan)={wuhan_R0}$)"
     ## plt.suptitle(title, fontsize=33)
     plt.tight_layout()
-    plt.savefig(f'./pix/risks_n{n}_kappa{kappa}_wuhan{wuhan_R0}.jpg', quality=QUALITY, dpi=DPI)
+    plt.savefig(f'./pix/{region}_annual_risks_n{n}_kappa{kappa}_wuhan{wuhan_R0}.jpg', quality=QUALITY, dpi=DPI)
     plt.close('all')
 
     # df = df.query('Origin == "WUH"')
@@ -172,37 +162,29 @@ def plot_annual_risks(df, kappa=1, n=1, wuhan_R0=4, world=True):
     #     plt.close('all')
 
     
-def plot_geodesics(df, world=True):
+def plot_geodesics(df, region='global'):
     print("Plotting geodesics")
     fig = plt.figure(figsize=FIG_SIZE)
     ax = plt.axes(projection=ccrs.PlateCarree())
-    #ax.stock_img()
+    _add_features(ax)
+    
+    ax.set_xlim(-180,180)
+    ax.set_ylim(-90,90)
 
-    ax.add_feature(cfeature.LAND)
-    ax.add_feature(cfeature.OCEAN)
-    ax.add_feature(cfeature.COASTLINE)
-    ax.add_feature(cfeature.BORDERS)
-    ax.add_feature(cfeature.STATES)
-    ax.set_xticklabels([])
-    ax.set_yticklabels([])
-    if world:
-        ax.set_xlim(-180,180)
-        ax.set_ylim(-90,90)
     mx = df.Prediction.max()
-    df = df.assign(opacity=np.maximum(df.Prediction.values, 1000*np.ones(len(df)))/mx)
+    opacity = np.maximum(df.Prediction.values, 1000*np.ones(len(df)))/mx
     lines = plt.plot(df[['origin_lon', 'dest_lon']].T,
                      df[['origin_lat', 'dest_lat']].T, 
                      color='r',
                      transform=ccrs.Geodetic())
-    [line.set_alpha(alpha) for alpha, line in zip(df.opacity, lines)]
-
+    [line.set_alpha(alpha) for alpha, line in zip(opacity, lines)]
     plt.tight_layout()
     ## plt.suptitle('Weighted flight connectivity', fontsize=33)
-    plt.savefig('./pix/geodesics.jpg', quality=QUALITY, dpi=DPI)
+    plt.savefig(f'./pix/geodesics_{region}.jpg', quality=QUALITY, dpi=DPI)
     plt.close('all')
 
     
-def plot_airports(airports, density, world=True):
+def plot_airports(airports, density, region=None):
     print("Plotting airports")
     vis = airports.loc[airport_list]
     dd = np.log(1+density)
@@ -217,9 +199,8 @@ def plot_airports(airports, density, world=True):
     ax.scatter(vis.col_max, vis.row_max, label='Maximizers', color='g')
     ax.set_xticklabels([])
     ax.set_yticklabels([])
-    if world:
-        ax.set_xlim(-180,180)
-        ax.set_ylim(-90,90)    
+    # ax.set_xlim(-180,180)
+    # ax.set_ylim(-90,90)    
 
     for _, row in vis.iterrows():
         ax.annotate(row['NodeName'] + ' airport', (row['col']+1, row['row']), color='r', fontsize=15)
@@ -232,7 +213,7 @@ def plot_airports(airports, density, world=True):
     plt.close('all')
 
     
-def plot_density(specs, world=True):
+def plot_density(specs):
     print("Plotting density")
     rows, cols = specs['data'].shape
     cols, rows = np.meshgrid(range(cols), range(rows))
@@ -247,9 +228,8 @@ def plot_density(specs, world=True):
     ax.coastlines(color='w')
     ax.set_xticklabels([])
     ax.set_yticklabels([])
-    if world:
-        ax.set_xlim(-180,180)
-        ax.set_ylim(-90,90)
+    ax.set_xlim(-180,180)
+    ax.set_ylim(-90,90)
 
     ## plt.suptitle("log(1 + Density)", fontsize=33)
     plt.tight_layout()
