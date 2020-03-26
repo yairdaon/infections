@@ -56,8 +56,6 @@ def plot_monthly_risks(travel, kappa=1, n=1, wuhan_R0=4, region='global'):
         ax.scatter(df.origin_lon, df.origin_lat, color=cm.coolwarm(df.risk_i))
         _add_features(ax)
         ax.text(-175, -80, month, fontsize=35, color='r')
-        ax.set_xticklabels([])
-        ax.set_yticklabels([])
         ax.set_xlim(-180,180)
         ax.set_ylim(-90,90)
 

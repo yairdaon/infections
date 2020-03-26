@@ -30,8 +30,8 @@ def main(debug: ("Debug mode", 'flag', 'd')):
     else:
         R0s = [1, 2, 4, 6]
         regions = ['global', 'africa', 'india']
-        kappas   = [1, 2, 3, 4, 5, 6]
-        infected = [1, 2, 3]
+        kappas   = [1, 2, 3, 4, 5, 6, 4, 4]
+        infected = [1, 1, 1, 1, 1, 1, 2, 3]
 
     times = ['annual', 1, 4, 7, 10]
 
