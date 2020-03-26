@@ -39,8 +39,8 @@ airport_list = ['JFK', 'EWR', 'LGA', #NYC
                ]
 
 FIG_SIZE=np.array([20,10])
-CB_SIZE=np.array([4,1])
-TICK_FONT_SIZE=16
+CB_SIZE=np.array([1,0.2])
+TICK_FONT_SIZE=22
 QUALITY=95
 DPI=400
 
