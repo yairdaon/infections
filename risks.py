@@ -10,6 +10,7 @@ import visualization as vis
 
 
 def main(debug: ("Debug mode", 'flag', 'd')):
+    colorbar = False
     vis.plot_p_outbreak()
     print('Loading density')
     specs = loaders.load_density()
@@ -63,12 +64,12 @@ def main(debug: ("Debug mode", 'flag', 'd')):
         for wuhan_R0 in R0s:
             wuhan_factor =  wuhan_R0 / airports.loc['WUH', 'density'] # R_0 / density for Wuhan
             airports['R0'] = airports.density * wuhan_factor
-            vis.plot_R0(airports)
+            vis.plot_R0(airports, colorbar=colorbar)
     
-            for kappa, n in product(kappas, infected):
+            for kappa, n in zip(kappas, infected):
                 airports['p_outbreak'] = loaders.calculate_outbreaks(airports, kappa=kappa, n=n)
                 tmp_travel = {k: loaders.augment_travel(df, airports, destinations=dest) for k, df in travel.items()}
-                vis.plot_annual_risks(tmp_travel['annual'], n=n, kappa=kappa, wuhan_R0=wuhan_R0, region=region)
+                vis.plot_annual_risks(tmp_travel['annual'], n=n, kappa=kappa, wuhan_R0=wuhan_R0, region=region, colorbar=colorbar)
                 vis.plot_monthly_risks(tmp_travel, kappa=kappa, n=n, wuhan_R0=wuhan_R0, region=region)
 
    

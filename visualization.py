@@ -39,7 +39,7 @@ airport_list = ['JFK', 'EWR', 'LGA', #NYC
                ]
 
 FIG_SIZE=np.array([20,10])
-CB_SIZE=np.array([1,0.2])
+CB_SIZE=np.array([0.5,0.05])
 TICK_FONT_SIZE=22
 QUALITY=95
 DPI=400
@@ -64,7 +64,6 @@ def plot_monthly_risks(travel, kappa=1, n=1, wuhan_R0=4, region='global'):
     fig = plt.figure(constrained_layout=True, figsize=FIG_SIZE)
     gs = fig.add_gridspec(2, 8)
 
-
     ax1 = fig.add_subplot(gs[0, 0:4], projection=ccrs.PlateCarree())
     df = travel[1]
     make_it(ax1, df, 'January')
@@ -82,14 +81,17 @@ def plot_monthly_risks(travel, kappa=1, n=1, wuhan_R0=4, region='global'):
     df = travel[10]
     make_it(ax4, df, 'October')
     
-    plt.savefig(f'./pix/{region}_monthly_risks_kappa{kappa}_n{n}_wuhan{wuhan_R0}.jpg', quality=QUALITY, dpi=DPI)
+    plt.savefig(f'./pix/risks_monthly_{region}_wuhan{wuhan_R0}_n{n}_kappa{kappa}.jpg', quality=QUALITY, dpi=DPI)
     plt.close('all')
 
-def plot_R0(df):
+def plot_R0(df, colorbar=True):
     print('Plotting R0')
     wuhan_R0 = int(df.loc['WUH', 'R0'])
     cm = plt.cm.coolwarm
-    fig = plt.figure(figsize=FIG_SIZE+CB_SIZE)
+    fig_size = FIG_SIZE
+    if colorbar:
+        fig_size = F_G_SIZE + CB_SIZE 
+    fig = plt.figure(figsize=fig_size)
     ax = plt.axes(projection=ccrs.PlateCarree())
     ax.scatter(df.Lon, 
                df.Lat,
@@ -98,13 +100,14 @@ def plot_R0(df):
     ax.set_xlim(-180,180)
     ax.set_ylim(-90,90)
 
-    norm = Normalize(vmin=0, vmax=df.R0.max())
-    sm = plt.cm.ScalarMappable(cmap=cm, norm=norm)
-    sm._A = []
-    cb = plt.colorbar(sm, orientation='vertical')
-    cb.ax.tick_params(labelsize=TICK_FONT_SIZE)
+    if colorbar:
+        norm = Normalize(vmin=0, vmax=df.R0.max())
+        sm = plt.cm.ScalarMappable(cmap=cm, norm=norm)
+        sm._A = []
+        cb = plt.colorbar(sm, orientation='vertical')
+        cb.ax.tick_params(labelsize=TICK_FONT_SIZE)
     
-    title = f"Basic Reproductive Number $R_0$"
+    #title = f"Basic Reproductive Number $R_0$"
     ## plt.suptitle(title, fontsize=33)
     plt.tight_layout()
     plt.savefig(f'./pix/R0_wuhan{wuhan_R0}.jpg', quality=QUALITY, dpi=DPI)
@@ -112,11 +115,14 @@ def plot_R0(df):
 
     
     
-def plot_annual_risks(df, kappa=1, n=1, wuhan_R0=4, region='global'):
+def plot_annual_risks(df, kappa=1, n=1, wuhan_R0=4, region='global', colorbar=True):
     print("Plotting risks")
     # cm = plt.cm.plasma
     cm = plt.cm.coolwarm
-    fig = plt.figure(figsize=FIG_SIZE+CB_SIZE)
+    fig_size = FIG_SIZE
+    if colorbar:
+        fig_size = FIG_SIZE + CB_SIZE
+    fig = plt.figure(figsize=fig_size)
     ax = plt.axes(projection=ccrs.PlateCarree())
     ax.scatter(df.origin_lon, 
                df.origin_lat,
@@ -125,13 +131,14 @@ def plot_annual_risks(df, kappa=1, n=1, wuhan_R0=4, region='global'):
     ax.set_xlim(-180,180)
     ax.set_ylim(-90,90)
 
-    sm = plt.cm.ScalarMappable(cmap=cm)
-    sm._A = []
-    cb = plt.colorbar(sm, orientation='vertical')
-    title = f"Risk of Outbreak, Introducing {n} Infected Individual(s) ($\kappa={kappa}, R_0(Wuhan)={wuhan_R0}$)"
+    if colorbar:
+        sm = plt.cm.ScalarMappable(cmap=cm)
+        sm._A = []
+        cb = plt.colorbar(sm, orientation='vertical')
+    # title = f"Risk of Outbreak, Introducing {n} Infected Individual(s) ($\kappa={kappa}, R_0(Wuhan)={wuhan_R0}$)"
     ## plt.suptitle(title, fontsize=33)
     plt.tight_layout()
-    plt.savefig(f'./pix/{region}_annual_risks_n{n}_kappa{kappa}_wuhan{wuhan_R0}.jpg', quality=QUALITY, dpi=DPI)
+    plt.savefig(f'./pix/risks_annual_{region}_wuhan{wuhan_R0}_n{n}_kappa{kappa}.jpg', quality=QUALITY, dpi=DPI)
     plt.close('all')
 
     # df = df.query('Origin == "WUH"')
