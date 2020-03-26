@@ -10,6 +10,9 @@ import visualization as vis
 
 
 def main(debug: ("Debug mode", 'flag', 'd')):
+    if debug:
+        vis.DPI=50
+        vis.QUALITY=75
     
     vis.plot_p_outbreak()
     print('Loading density')
@@ -54,7 +57,6 @@ def main(debug: ("Debug mode", 'flag', 'd')):
     dest_dict['africa'] = np.intersect1d(valid, destinations.query('continent == "AF"').iata_code.dropna().unique())
     dest_dict['india']  = np.intersect1d(valid, destinations.query('iso_country == "IN"').iata_code.dropna().unique())
     dest_dict['global'] = valid
-    
 
     for region in regions:
         print()
@@ -73,7 +75,8 @@ def main(debug: ("Debug mode", 'flag', 'd')):
                 vis.plot_annual_risks(tmp_travel['annual'], n=n, kappa=kappa, wuhan_R0=wuhan_R0, region=region)
                 vis.plot_monthly_risks(tmp_travel, kappa=kappa, n=n, wuhan_R0=wuhan_R0, region=region)
                 
-   
+                
+    
     
 if __name__ == '__main__':
     try:

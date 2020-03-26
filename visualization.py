@@ -23,8 +23,7 @@ if not os.path.exists('./pix/india'):
 if not os.path.exists('./pix/global'):
     os.mkdir('./pix/global')
 
-
-
+    
 airport_list = ['JFK', 'EWR', 'LGA', #NYC
                 #'PUQ', 
                 #'HNL', # Hawaii
@@ -52,6 +51,7 @@ DPI=300
 
 def _add_features(ax):
     ax.add_feature(cfeature.BORDERS)
+    ax.add_feature(cfeature.STATES)
     ax.add_feature(cfeature.COASTLINE)
     ax.set_xticklabels([])
     ax.set_yticklabels([])
@@ -157,9 +157,15 @@ def plot_geodesics(df, destinations, region):
                      color='r',
                      transform=ccrs.Geodetic())
     [line.set_alpha(alpha) for alpha, line in zip(opacity, lines)]
-    plt.tight_layout()
+    
     if region == 'global':
-        ax.text(-175, -80, 'a', fontsize=35, color='r')
+        text = 'a'
+    elif region == 'india':
+        text = 'India'
+    elif region == 'africa':
+        text = 'Africa'
+    ax.text(-175, -80, text, fontsize=35, color='r')
+    plt.tight_layout()
     plt.savefig(f'./pix/{region}/geodesics.jpg', quality=QUALITY, dpi=DPI)
     plt.close('all')
 
@@ -190,8 +196,7 @@ def plot_airports(airports, density):
     plt.tight_layout()
     plt.savefig('./pix/airports.jpg', quality=QUALITY, dpi=DPI)
     plt.close('all')
-    
-    
+        
     
 def plot_density(specs):
     print("Plotting density")
@@ -210,13 +215,40 @@ def plot_density(specs):
     ax.set_yticklabels([])
     ax.set_xlim(-180,180)
     ax.set_ylim(-90,90)
-
-    ## plt.suptitle("log(1 + Density)", fontsize=33)
+   
+    ax.text(-175, -80, 'b', fontsize=35, color='r')     
     plt.tight_layout()
-    ax.text(-175, -80, 'b', fontsize=35, color='r') 
     plt.savefig('./pix/density.jpg', quality=QUALITY, dpi=DPI)
     plt.close('all')
     
+
+def plot_geodesics_density():
+    df = df.query('Dest in @destinations')
+    fig = plt.figure(figsize=FIG_SIZE)
+    plateCr = ccrs.PlateCarree()
+    plateCr._threshold = plateCr._threshold/10.
+    ax = plt.axes(projection=plateCr)
+    _add_features(ax)
+    ax.set_xlim(-180,180)
+    ax.set_ylim(-90,90)
+
+    mx = df.Prediction.max()
+    cutoff = 0.005 if region == 'global' else 0.05
+    opacity = np.maximum(df.Prediction.values/mx, cutoff)
+    lines = plt.plot(df[['origin_lon', 'dest_lon']].T,
+                     df[['origin_lat', 'dest_lat']].T, 
+                     color='r',
+                     transform=ccrs.Geodetic())
+    [line.set_alpha(alpha) for alpha, line in zip(opacity, lines)]
+    plt.tight_layout()
+    if region == 'global':
+        ax.text(-175, -80, 'a', fontsize=35, color='r')
+    plt.savefig(f'./pix/{region}/geodesics.jpg', quality=QUALITY, dpi=DPI)
+    plt.close('all')
+
+
+    
+
     
 def plot_p_outbreak(n=5):
     print("Plotting probability of outbreak function")

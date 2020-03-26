@@ -15,6 +15,7 @@ def p_outbreak(kappa, n=1):
     else:
         return lambda R: np.maximum(1 - 1/R**n, 0)
 
+    
 def process(n, filename):
     line = gl(filename, n).replace('\n','').split(' ')
     return line[0], line[-1]
