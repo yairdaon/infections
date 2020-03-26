@@ -49,7 +49,7 @@ def get_coordinate_functions(specs):
     return specs
 
 
-def augment(lon, lat, specs, scan=30, avg=15): #resolution in degrees
+def augment(lon, lat, specs, scan=65, avg=15): #resolution in degrees
     data = specs['data']
     lon_f = specs['lon_f']
     lat_f = specs['lat_f']

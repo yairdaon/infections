@@ -9,8 +9,9 @@ import geography
 import visualization as vis
 
 
-def main(debug: ("Debug mode", 'flag', 'd')):
-    colorbar = False
+def main(debug: ("Debug mode", 'flag', 'd'),
+         colorbar: ("Add colorbar to some plots", 'flag', 'cb')):
+    
     vis.plot_p_outbreak()
     print('Loading density')
     specs = loaders.load_density()
@@ -28,38 +29,39 @@ def main(debug: ("Debug mode", 'flag', 'd')):
         infected = [1]
     
     else:
-        R0s = [1, 2, 4, 6]
+        R0s = [2, 3, 4]
         regions = ['global', 'africa', 'india']
-        kappas   = [1, 2, 3, 4, 5, 6, 4, 4]
-        infected = [1, 1, 1, 1, 1, 1, 2, 3]
+        kappas   = [1, 3, 6, 1, 1]
+        infected = [1, 1, 1, 2, 3]
 
-    times = ['annual', 1, 4, 7, 10]
 
     print('loading airport data')
     airports = loaders.load_airports(specs)
     if debug:
         airports = airports.loc[vis.airport_list]
 
-    if not debug:
+    if debug:
         vis.plot_airports(airports, specs['data'])
         
     
     travel = loaders.load_travel(airports)
+    times = ['annual', 1, 4, 7, 10]
     travel = {k: travel[k] for k in times}
-  
+
+    ## Get vailid destinations for every region
     destinations = pd.read_csv('./data/airports.csv')
     valid = airports.NodeName.values
     dest_dict = {}
     dest_dict['africa'] = np.intersect1d(valid, destinations.query('continent == "AF"').iata_code.dropna().unique())
     dest_dict['india']  = np.intersect1d(valid, destinations.query('iso_country == "IN"').iata_code.dropna().unique())
-    dest_dict['global'] = valid
+    dest_dict['global'] = None
     
 
     for region in regions:
         print()
         print('Making', region, 'plots')
         dest = dest_dict[region]
-        vis.plot_geodesics(travel['annual'], destinations=dest, region=region)
+        vis.plot_geodesics(travel['annual'], destinations=dest, region=region) 
 
         for wuhan_R0 in R0s:
             wuhan_factor =  wuhan_R0 / airports.loc['WUH', 'density'] # R_0 / density for Wuhan
@@ -71,7 +73,7 @@ def main(debug: ("Debug mode", 'flag', 'd')):
                 tmp_travel = {k: loaders.augment_travel(df, airports, destinations=dest) for k, df in travel.items()}
                 vis.plot_annual_risks(tmp_travel['annual'], n=n, kappa=kappa, wuhan_R0=wuhan_R0, region=region, colorbar=colorbar)
                 vis.plot_monthly_risks(tmp_travel, kappa=kappa, n=n, wuhan_R0=wuhan_R0, region=region)
-
+                
    
     
 if __name__ == '__main__':

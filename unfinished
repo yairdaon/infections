@@ -1,1 +1,2 @@
-make sure averaging is good - proper squares (long/lat), radii.
+make sure averaging is good - proper squares (long/lat), radii. DONE
+ignore seas in density calculations (and other areas with zero density). DONE

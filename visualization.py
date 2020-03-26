@@ -21,11 +21,11 @@ if not os.path.exists('./pix'):
 airport_list = ['JFK', 'EWR', 'LGA', #NYC
                 #'PUQ', 
                 #'HNL', # Hawaii
-                'NRT', # Tokyo
-                'FRA', #Frankfurt
+                'NRT', 'HND',# Tokyo
+                #'FRA', #Frankfurt
                 'CPT', # Capetown
-                #'KEF', # Iceland
-                #'EZE', ## Buenos aires
+                'KEF', 'RKV', # Reykjavik Iceland
+                'EZE', ## Buenos aires
                 'SCL', ## Santiago Chile
                 #'TLV', 'SDV', 
                 'WUH', #Wuhan
@@ -33,7 +33,7 @@ airport_list = ['JFK', 'EWR', 'LGA', #NYC
                 'DEL', 
                 #'CDG', 'ORY', #Paris
                 'LTN', 'LHR', 'LGW', #London
-                #'TXL', 'SXF', #Berlin
+                'TXL', 'SXF', #Berlin
                 #'SFO', 'SJC', 'OAK', #San Francisco
                 #'MIA', 'FLL' #Miami
                ]
@@ -178,7 +178,7 @@ def plot_geodesics(df, destinations, region):
     ax.set_ylim(-90,90)
 
     mx = df.Prediction.max()
-    opacity = np.maximum(df.Prediction.values, 1000*np.ones(len(df)))/mx
+    opacity = np.maximum(df.Prediction.values/mx, 0.05)
     lines = plt.plot(df[['origin_lon', 'dest_lon']].T,
                      df[['origin_lat', 'dest_lat']].T, 
                      color='r',
@@ -209,15 +209,16 @@ def plot_airports(airports, density, region=None):
     # ax.set_ylim(-90,90)    
 
     for _, row in vis.iterrows():
-        ax.annotate(row['NodeName'] + ' airport', (row['col']+1, row['row']), color='r', fontsize=15)
+        ax.annotate(row['NodeName'], (row['col']+1, row['row']), color='r', fontsize=15)
         ax.annotate('Density= ' + str(int(row['density'])), (row['col_max']+1, row['row_max']), color='g', fontsize=15)
     
     plt.legend()
     plt.tight_layout()
     ## plt.suptitle("World Density and Selected Airports with Associated Population Centers", fontsize=33)
-    plt.savefig('./pix/airports.jpg', quality=QUALITY, dpi=DPI)
-    plt.close('all')
-
+    #plt.savefig('./pix/airports.jpg', quality=QUALITY, dpi=DPI)
+    #plt.close('all')
+    plt.show()
+    
     
 def plot_density(specs):
     print("Plotting density")

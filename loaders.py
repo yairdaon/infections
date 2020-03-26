@@ -9,9 +9,11 @@ from geography import augment
 
 f = lambda p, kappa, R: (1-p) * np.power(1 + p * R / kappa, kappa) - 1
 def p_outbreak(kappa, n=1):
-    ##               1 - (1 - P(major outbreak introducing one infected individual   ))**n
-    return lambda R: 1 - (1 - (fsolve(lambda p: f(p, kappa, R), x0=np.array(0.99))[0]))**n
-  
+    if kappa > 1:
+        ##               1 - (1 - P(major outbreak introducing one infected individual   ))**n
+        return lambda R: 1 - (1 - (fsolve(lambda p: f(p, kappa, R), x0=np.array(0.99))[0]))**n
+    else:
+        return lambda R: np.maximum(1 - 1/R**n, 0)
 
 def process(n, filename):
     line = gl(filename, n).replace('\n','').split(' ')
@@ -49,15 +51,18 @@ def load_travel(airports):
                            dest_lat=travel.Dest.replace(airports.Lat))
     annual = travel.groupby(['Origin', 'Dest']).mean().reset_index(drop=False).drop('Month',axis=1)
     annual['Prediction'] = (annual.Prediction * 12).astype(int)
+    annual['upper'] = (annual.upper * 12).astype(int)
+    annual['lower'] = (annual.lower * 12).astype(int)
     datas = {month: data for month, data in travel.groupby('Month')}
     datas['annual'] = annual
     return datas
 
 
-def augment_travel(travel, airports, destinations):
+def augment_travel(travel, airports, destinations=None):
     airport_p_outbreak = dict(zip(airports.index, airports.p_outbreak))
-    travel = travel.query("Dest in @destinations")
-    travel = travel.assign(dest_p_outbreak=travel.Dest.map(airport_p_outbreak),
+    if destinations is not None:
+        travel = travel.query("Dest in @destinations")
+    travel = travel.assign(dest_p_outbreak=travel.Dest.replace(airport_p_outbreak),
                            outgoing_total=travel.groupby('Origin').Prediction.transform('sum'))
     travel = travel.query('outgoing_total > 0').dropna()
     travel['P_ij'] = travel.Prediction / travel.outgoing_total
@@ -69,17 +74,22 @@ def augment_travel(travel, airports, destinations):
 
 def calculate_outbreaks(airports, kappa, n):
     f = p_outbreak(kappa, n)
-    return airports.R0.apply(f)
-
+    if kappa > 1:
+        return airports.R0.apply(f)
+    else:
+        return f(airports.R0)
 
 if __name__ == '__main__':
     kappas = [1, 1, 1, 1, 1, 1, 1, 2]
     Rs     = [1, 2, 3, 4, 5, 2, 3, 2]
     ns     = [1, 1, 1, 1, 1, 2, 2, 1]
-
+    for R in Rs:
+        p = p_outbreak(1, 1)(R/3)
+        p_eps = p_outbreak(1+1e-16, 1)(R/3)
+        assert abs(p-p_eps) < 1e-10, str(p) + '   ' + str(p_eps) 
     for kappa, R, n in zip(kappas, Rs, ns):
         p = p_outbreak(kappa, n=n)(R)
-        print(f'P(outbreak|R={R}, n={n}, kappa={kappa}) = {p:2.3f}') 
+        print(f'P(outbreak|R={R}, n={n}, kappa={int(kappa)}) = {p:2.3f}') 
 
 
 
