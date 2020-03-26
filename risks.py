@@ -2,15 +2,14 @@ import pdb
 from itertools import product
 import numpy as np
 import pandas as pd
-
+from tqdm import tqdm
 
 import loaders
 import geography
 import visualization as vis
 
 
-def main(debug: ("Debug mode", 'flag', 'd'),
-         colorbar: ("Add colorbar to some plots", 'flag', 'cb')):
+def main(debug: ("Debug mode", 'flag', 'd')):
     
     vis.plot_p_outbreak()
     print('Loading density')
@@ -54,7 +53,7 @@ def main(debug: ("Debug mode", 'flag', 'd'),
     dest_dict = {}
     dest_dict['africa'] = np.intersect1d(valid, destinations.query('continent == "AF"').iata_code.dropna().unique())
     dest_dict['india']  = np.intersect1d(valid, destinations.query('iso_country == "IN"').iata_code.dropna().unique())
-    dest_dict['global'] = None
+    dest_dict['global'] = valid
     
 
     for region in regions:
@@ -66,12 +65,12 @@ def main(debug: ("Debug mode", 'flag', 'd'),
         for wuhan_R0 in R0s:
             wuhan_factor =  wuhan_R0 / airports.loc['WUH', 'density'] # R_0 / density for Wuhan
             airports['R0'] = airports.density * wuhan_factor
-            vis.plot_R0(airports, colorbar=colorbar)
+            vis.plot_R0(airports)
     
-            for kappa, n in zip(kappas, infected):
+            for kappa, n in tqdm(list(zip(kappas, infected))):
                 airports['p_outbreak'] = loaders.calculate_outbreaks(airports, kappa=kappa, n=n)
                 tmp_travel = {k: loaders.augment_travel(df, airports, destinations=dest) for k, df in travel.items()}
-                vis.plot_annual_risks(tmp_travel['annual'], n=n, kappa=kappa, wuhan_R0=wuhan_R0, region=region, colorbar=colorbar)
+                vis.plot_annual_risks(tmp_travel['annual'], n=n, kappa=kappa, wuhan_R0=wuhan_R0, region=region)
                 vis.plot_monthly_risks(tmp_travel, kappa=kappa, n=n, wuhan_R0=wuhan_R0, region=region)
                 
    
