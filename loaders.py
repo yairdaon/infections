@@ -4,6 +4,8 @@ import pandas as pd
 import pdb
 from scipy.optimize import fsolve
 from functools import partial
+import os
+import pickle
 
 from geography import augment
 
@@ -22,9 +24,16 @@ def process(n, filename):
 
 
 def load_density():
-    filename = 'data/gpw_v4_population_density_rev11_2020_2pt5_min.asc'
-    data = np.loadtxt(filename, skiprows=6)
-    data[(data==-9999)] = 0
+    filename = './data/gpw_v4_population_density_rev11_2020_2pt5_min.asc'
+    pick_name = filename.replace('asc','pickle')
+    if os.path.exists(pick_name):
+        with open(pick_name,'rb') as f:
+            data = pickle.load(f)
+    else:
+        data = np.loadtxt(filename, skiprows=6)
+        data[(data==-9999)] = 0
+        with open(pick_name, 'wb') as f:
+            pickle.dump(data, f)
 
     f = lambda n: process(n, filename)
     specs = {k:float(v) for k,v in map(f,range(1,7))}
@@ -32,12 +41,21 @@ def load_density():
     return specs
 
 
-def load_airports(specs, wuhan_R0=4):
-    airports = pd.read_csv('data/AirportInfo.csv')
+def load_airports(specs):
+    filename = './data/AirportInfo.csv'
+    pick_name = filename.replace('csv', 'pickle')
+    if os.path.exists(pick_name):
+        with open(pick_name,'rb') as f:
+            return pickle.load(f)
+        
+    airports = pd.read_csv(filename)
     g = lambda lat, lon: augment(lon=lon, lat=lat, specs=specs)
     airports = [{**row, **g(lat=row['Lat'], lon=row['Lon'])} for _, row in airports.iterrows()]
     airports = pd.DataFrame(airports)
     airports.index = airports.NodeName.astype(str)
+    with open(pick_name,'wb') as f:
+        return pickle.dump(airports, f)
+    
     return airports
 
 

@@ -24,7 +24,7 @@ def main(debug: ("Debug mode", 'flag', 'd')):
         vis.plot_density(specs)
 
     if debug:
-        R0s = [4]
+        R0s = [3]
         regions = ['global']
         regions = ['global', 'africa', 'india']
         kappas = [1]
