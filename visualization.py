@@ -13,15 +13,15 @@ import os
 
 import loaders
 
-
-if not os.path.exists('./pix'):
-    os.mkdir('./pix')
-if not os.path.exists('./pix/africa'):
-    os.mkdir('./pix/africa')
-if not os.path.exists('./pix/india'):
-    os.mkdir('./pix/india')
-if not os.path.exists('./pix/global'):
-    os.mkdir('./pix/global')
+for lib in ['pix']:
+    if not os.path.exists(f'./{lib}'):
+        os.mkdir(f'./{lib}')
+    if not os.path.exists(f'./{lib}/africa'):
+        os.mkdir(f'./{lib}/africa')
+    if not os.path.exists(f'./{lib}/india'):
+        os.mkdir(f'./{lib}/india')
+    if not os.path.exists(f'./{lib}/global'):
+        os.mkdir(f'./{lib}/global')
 
     
 airport_list = ['JFK', 'EWR', 'LGA', #NYC
@@ -46,8 +46,8 @@ airport_list = ['JFK', 'EWR', 'LGA', #NYC
 
 XLIM = np.array([-180, 180])
 YLIM = np.array([-90, 90])
-FIG_SIZE=np.array([20, 20 * (YLIM[1]-YLIM[0]) / (XLIM[1]-XLIM[0])], dtype=int)
-CB_SIZE=np.array([1,0])
+MAP_SIZE = np.array([20, 9])
+CB_SIZE=np.array([MAP_SIZE[0],2])
 TICK_FONT_SIZE=22
 QUALITY=95
 DPI=200
@@ -63,8 +63,11 @@ def _add_features(ax):
     ax.set_ylim(*YLIM)
     return ax
 
+
 def _annotate(ax, text, color):
-    ax.text(-175, -80, text, fontsize=35, color=color)
+    #ax.text(XLIM[0]+10, YLIM[0]+20, text, fontsize=50, color='k')
+    pass
+
     
 def plot_monthly_risks(travel, kappa=1, n=1, wuhan_R0=3, region='global'):
     def make_it(ax, df, month):
@@ -73,7 +76,7 @@ def plot_monthly_risks(travel, kappa=1, n=1, wuhan_R0=3, region='global'):
         _annotate(ax, text=month, color='r')
        
 
-    fig = plt.figure(figsize=FIG_SIZE)
+    fig = plt.figure(figsize=MAP_SIZE)
     gs = fig.add_gridspec(2, 8)
 
     ax1 = fig.add_subplot(gs[0, 0:4], projection=ccrs.PlateCarree())
@@ -102,33 +105,33 @@ def plot_R0(df):
     wuhan_R0 = int(df.loc['WUH', 'R0'])
     cm = plt.cm.coolwarm
 
-    figsize = FIG_SIZE + CB_SIZE
-    fig = plt.figure(figsize=figsize)
-    gs = fig.add_gridspec(figsize[1], figsize[0])
-    ax = fig.add_subplot(gs[:figsize[1], 0:FIG_SIZE[0]], projection=ccrs.PlateCarree())
+    fig = plt.figure(figsize=MAP_SIZE)
+    ax = fig.add_subplot(1, 1, 1, projection=ccrs.PlateCarree())
     
     ax.scatter(df.Lon, 
                df.Lat,
                color = cm(df.R0))
     _add_features(ax)
-    
-    ax = fig.add_subplot(gs[:figsize[1], FIG_SIZE[0]:figsize[0]])
-    ax.yaxis.set_tick_params(labelsize=20)
-    sm = plt.cm.ScalarMappable(cmap=cm)
-    sm._A = []
-    plt.colorbar(sm, orientation='vertical', cax=ax)
     plt.tight_layout()
     plt.savefig(f'./pix/R0_wuhan{wuhan_R0}.jpg', quality=QUALITY, dpi=DPI)
     plt.close('all')
 
-    
+    fig = plt.figure(figsize=CB_SIZE)
+    ax = fig.add_subplot()
+    ax.yaxis.set_tick_params(labelsize=20)
+    sm = plt.cm.ScalarMappable(cmap=cm)
+    sm._A = []
+    cbar = plt.colorbar(sm, orientation='horizontal', cax=ax)
+    cbar.ax.tick_params(labelsize=35) 
+    plt.tight_layout()
+    plt.savefig(f'./pix/R0_wuhan{wuhan_R0}_cb.jpg', quality=QUALITY, dpi=DPI)
+    plt.close('all')
+
+        
 def plot_annual_risks(df, kappa=1, n=1, wuhan_R0=3, region='global'):
-    cm = plt.cm.coolwarm
-                         
-    figsize = FIG_SIZE+CB_SIZE
-    fig = plt.figure(figsize=figsize)
-    gs = fig.add_gridspec(figsize[1],figsize[0])
-    ax = fig.add_subplot(gs[:figsize[1], 0:FIG_SIZE[0]], projection=ccrs.PlateCarree())
+    cm = plt.cm.coolwarm                 
+    fig = plt.figure(figsize=MAP_SIZE)
+    ax = fig.add_subplot(1, 1, 1, projection=ccrs.PlateCarree())
     
     ax.scatter(df.origin_lon, 
                df.origin_lat,
@@ -137,29 +140,35 @@ def plot_annual_risks(df, kappa=1, n=1, wuhan_R0=3, region='global'):
     
     if kappa==1 and n==1 and wuhan_R0==3:
         _annotate(ax, text='b', color='r')
-    
-    ax = fig.add_subplot(gs[:figsize[1], FIG_SIZE[0]:figsize[0]])
-    ax.yaxis.set_tick_params(labelsize=20)
-    sm = plt.cm.ScalarMappable(cmap=cm)
-    sm._A = []
-    plt.colorbar(sm, orientation='vertical', cax=ax)
-    
+
     plt.tight_layout()
     plt.savefig(f'./pix/{region}/risks_annual_wuhan{wuhan_R0}_n{n}_kappa{kappa}.jpg', quality=QUALITY, dpi=DPI)
     plt.close('all')
+
+    
+def plot_cb(orientation='horizontal'):
+    cm = plt.cm.coolwarm                 
+    fig = plt.figure(figsize=CB_SIZE)
+    ax = fig.add_subplot(1, 1, 1)
+    sm = plt.cm.ScalarMappable(cmap=cm)
+    sm._A = []
+    cbar = plt.colorbar(sm, orientation=orientation, cax=ax)
+    cbar.ax.tick_params(labelsize=35) 
+    plt.tight_layout()
+    plt.savefig(f'./pix/cb_{orientation}.jpg', quality=QUALITY, dpi=DPI)
+    plt.close('all')
+
     
 def plot_geodesics(df, destinations, region):
     print("Plotting geodesics")
     df = df.query('Dest in @destinations')
-    fig = plt.figure(figsize=FIG_SIZE)
+    fig = plt.figure(figsize=MAP_SIZE)
     plateCr = ccrs.PlateCarree()
     plateCr._threshold = plateCr._threshold/10.
     ax = plt.axes(projection=plateCr)
-    _add_features(ax)
-
     
     mx = df.Prediction.max()
-    cutoff = 0.005 if region == 'global' else 0.05
+    cutoff = 0.005 if region == 'global' else 0.075
     opacity = np.maximum(df.Prediction.values/mx, cutoff)
     lines = plt.plot(df[['origin_lon', 'dest_lon']].T,
                      df[['origin_lat', 'dest_lat']].T, 
@@ -168,6 +177,8 @@ def plot_geodesics(df, destinations, region):
     [line.set_alpha(alpha) for alpha, line in zip(opacity, lines)]
 
     _annotate(ax, text='a', color='r')
+    _add_features(ax)
+
     plt.tight_layout()
     plt.savefig(f'./pix/{region}/geodesics.jpg', quality=QUALITY, dpi=DPI)
     plt.close('all')
@@ -177,7 +188,7 @@ def plot_airports(airports, density):
     print("Plotting airports")
     vis = airports.loc[airport_list]
     dd = np.log(1+density)
-    fig, ax= plt.subplots(1,1, figsize=FIG_SIZE)
+    fig, ax= plt.subplots(1,1, figsize=MAP_SIZE)
     im = ax.imshow(dd, cmap=cm.gray)
     ax.scatter(vis.col_left, vis.row, label='Window', color='b')
     ax.scatter(vis.col_right, vis.row, color='b')
@@ -207,7 +218,7 @@ def plot_density(specs):
     lons = specs['col_g'](cols)
     density = specs['data']
 
-    fig = plt.figure(figsize=FIG_SIZE)
+    fig = plt.figure(figsize=MAP_SIZE)
     ax = plt.axes(projection=ccrs.PlateCarree())
     plt.contourf(lons, lats, np.log(1+density),
                  transform=ccrs.PlateCarree(), cmap=cm.gray)# cmap='coolwarm')
@@ -217,37 +228,11 @@ def plot_density(specs):
     ax.set_xlim(-180,180)
     ax.set_ylim(-90,90)
    
-    ax.text(-175, -80, 'b', fontsize=35, color='r')     
+    #ax.text(-175, -80, 'b', fontsize=35, color='r')     
     plt.tight_layout()
     plt.savefig('./pix/density.jpg', quality=QUALITY, dpi=DPI)
     plt.close('all')
-    
-
-def plot_geodesics_density():
-    df = df.query('Dest in @destinations')
-    fig = plt.figure(figsize=FIG_SIZE)
-    plateCr = ccrs.PlateCarree()
-    plateCr._threshold = plateCr._threshold/10.
-    ax = plt.axes(projection=plateCr)
-    _add_features(ax)
-    
-
-    mx = df.Prediction.max()
-    cutoff = 0.005 if region == 'global' else 0.05
-    opacity = np.maximum(df.Prediction.values/mx, cutoff)
-    lines = plt.plot(df[['origin_lon', 'dest_lon']].T,
-                     df[['origin_lat', 'dest_lat']].T, 
-                     color='r',
-                     transform=ccrs.Geodetic())
-    [line.set_alpha(alpha) for alpha, line in zip(opacity, lines)]
-    plt.tight_layout()
-    if region == 'global':
-        _annotate(ax, text='a', color='r')
-    plt.savefig(f'./pix/{region}/geodesics.jpg', quality=QUALITY, dpi=DPI)
-    plt.close('all')
-
-
-    
+        
 
     
 def plot_p_outbreak(n=5):

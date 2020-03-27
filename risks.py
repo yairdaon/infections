@@ -13,7 +13,8 @@ def main(debug: ("Debug mode", 'flag', 'd')):
     if debug:
         vis.DPI=50
         vis.QUALITY=75
-    
+
+    vis.plot_cb()
     vis.plot_p_outbreak()
     print('Loading density')
     specs = loaders.load_density()
@@ -42,8 +43,8 @@ def main(debug: ("Debug mode", 'flag', 'd')):
     if debug:
         airports = airports.loc[vis.airport_list]
 
-    if debug:
-        vis.plot_airports(airports, specs['data'])
+    # if debug:
+    #     vis.plot_airports(airports, specs['data'])
         
     
     travel = loaders.load_travel(airports)
