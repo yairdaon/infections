@@ -14,14 +14,13 @@ def main(debug: ("Debug mode", 'flag', 'd')):
         vis.DPI=50
         vis.QUALITY=75
     
-    vis.plot_p_outbreak()
+    #vis.plot_p_outbreak()
     print('Loading density')
     specs = loaders.load_density()
 
     print('calculating coordinate functions')
     specs = geography.get_coordinate_functions(specs)
-    if not debug:
-        vis.plot_density(specs)
+    #vis.plot_density(specs)
 
     if debug:
         R0s = [3]
@@ -42,8 +41,8 @@ def main(debug: ("Debug mode", 'flag', 'd')):
     if debug:
         airports = airports.loc[vis.airport_list]
 
-    if debug:
-        vis.plot_airports(airports, specs['data'])
+    # if debug:
+    #     vis.plot_airports(airports, specs['data'])
         
     
     travel = loaders.load_travel(airports)
@@ -69,11 +68,11 @@ def main(debug: ("Debug mode", 'flag', 'd')):
             airports['R0'] = airports.density * wuhan_factor
             vis.plot_R0(airports)
     
-            for kappa, n in tqdm(list(zip(kappas, infected))):
-                airports['p_outbreak'] = loaders.calculate_outbreaks(airports, kappa=kappa, n=n)
-                tmp_travel = {k: loaders.augment_travel(df, airports, destinations=dest) for k, df in travel.items()}
-                vis.plot_annual_risks(tmp_travel['annual'], n=n, kappa=kappa, wuhan_R0=wuhan_R0, region=region)
-                vis.plot_monthly_risks(tmp_travel, kappa=kappa, n=n, wuhan_R0=wuhan_R0, region=region)
+            # for kappa, n in tqdm(list(zip(kappas, infected))):
+            #     airports['p_outbreak'] = loaders.calculate_outbreaks(airports, kappa=kappa, n=n)
+            #     tmp_travel = {k: loaders.augment_travel(df, airports, destinations=dest) for k, df in travel.items()}
+            #     vis.plot_annual_risks(tmp_travel['annual'], n=n, kappa=kappa, wuhan_R0=wuhan_R0, region=region)
+            #     vis.plot_monthly_risks(tmp_travel, kappa=kappa, n=n, wuhan_R0=wuhan_R0, region=region)
                 
                 
     
