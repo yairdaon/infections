@@ -1,2 +1,8 @@
 make sure averaging is good - proper squares (long/lat), radii. DONE
 ignore seas in density calculations (and other areas with zero density). DONE
+raise letter location
+increase letter size
+cut antarctia
+letter color black
+arrange dropbox
+csv of all airports w flights from wuhan with p_outbreak P_ij density etc.
