@@ -14,7 +14,8 @@ def main(debug: ("Debug mode", 'flag', 'd')):
         vis.DPI=50
         vis.QUALITY=75
 
-    vis.plot_cb()
+    vis.plot_cb(orientation='horizontal')
+    vis.plot_cb(orientation='vertical')
     vis.plot_p_outbreak()
     print('Loading density')
     specs = loaders.load_density()

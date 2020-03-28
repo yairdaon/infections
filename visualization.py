@@ -1,15 +1,19 @@
 import numpy as np
+from scipy.optimize import fsolve
+import matplotlib as mpl
 from matplotlib import pyplot as plt
-from matplotlib import cm
+from matplotlib.cm import jet, gray, plasma 
+from matplotlib import gridspec
 import pdb
+from functools import partial
+import os
+mpl.rcParams['axes.linewidth'] = 0.1 #set the value globally
+
+
+from cartopy import config
 import cartopy.crs as ccrs
 import cartopy.feature as cfeature
-from cartopy import config
-from matplotlib import gridspec
-from matplotlib.colors import Normalize
-from functools import partial
-from scipy.optimize import fsolve
-import os
+
 
 import loaders
 
@@ -44,34 +48,39 @@ airport_list = ['JFK', 'EWR', 'LGA', #NYC
                 #'MIA', 'FLL' #Miami
                ]
 
-XLIM = np.array([-180, 180])
-YLIM = np.array([-90, 90])
-MAP_SIZE = np.array([20, 9])
-CB_SIZE=np.array([MAP_SIZE[0],2])
+XLIMS={'global':[-180,180],
+       'africa':[-100,180],
+       'india':[-90,145]}
+YLIM=[-90+36,90-6]
+
+MAP_SIZE = np.array([20, 10])
+H_CB_SIZE=(20,2)
+V_CB_SIZE=(2,20)
+
 TICK_FONT_SIZE=22
 QUALITY=95
 DPI=200
 
 
-def _add_features(ax):
+def _add_features(ax, region='global'):
+    #ax.set_extent([XLIM[0], XLIM[1], YLIM[0], YLIM[1]], crs=ccrs.PlateCarree())
+    ax.set_ylim(*YLIM)
+    ax.set_xlim(*XLIMS[region])
     ax.add_feature(cfeature.BORDERS)
     ax.add_feature(cfeature.STATES)
     ax.add_feature(cfeature.COASTLINE)
-    ax.set_xticklabels([])
-    ax.set_yticklabels([])
-    ax.set_xlim(*XLIM)
-    ax.set_ylim(*YLIM)
+    # ax.set_xticklabels([])
+    # ax.set_yticklabels([])
     return ax
 
 
 def _annotate(ax, text, color):
-    #ax.text(XLIM[0]+10, YLIM[0]+20, text, fontsize=50, color='k')
+    #ax.text(XLIM[0]+5, YLIM[0]+5, text, fontsize=50, color='k')
     pass
-
     
 def plot_monthly_risks(travel, kappa=1, n=1, wuhan_R0=3, region='global'):
     def make_it(ax, df, month):
-        ax.scatter(df.origin_lon, df.origin_lat, color=cm.coolwarm(df.risk_i))
+        ax.scatter(df.origin_lon, df.origin_lat, color=jet(df.risk_i))
         _add_features(ax)
         _annotate(ax, text=month, color='r')
        
@@ -86,7 +95,6 @@ def plot_monthly_risks(travel, kappa=1, n=1, wuhan_R0=3, region='global'):
     ax2 = fig.add_subplot(gs[0, 4:8], projection=ccrs.PlateCarree())
     df = travel[4]
     make_it(ax2, df, 'April')
-
 
     ax3 = fig.add_subplot(gs[1:, 0:4], projection=ccrs.PlateCarree())
     df = travel[7]
@@ -103,23 +111,22 @@ def plot_monthly_risks(travel, kappa=1, n=1, wuhan_R0=3, region='global'):
     
 def plot_R0(df):
     wuhan_R0 = int(df.loc['WUH', 'R0'])
-    cm = plt.cm.coolwarm
-
     fig = plt.figure(figsize=MAP_SIZE)
     ax = fig.add_subplot(1, 1, 1, projection=ccrs.PlateCarree())
     
     ax.scatter(df.Lon, 
                df.Lat,
-               color = cm(df.R0))
+               color = plasma(df.R0))
     _add_features(ax)
     plt.tight_layout()
     plt.savefig(f'./pix/R0_wuhan{wuhan_R0}.jpg', quality=QUALITY, dpi=DPI)
     plt.close('all')
 
-    fig = plt.figure(figsize=CB_SIZE)
+    fig = plt.figure(figsize=H_CB_SIZE)
     ax = fig.add_subplot()
-    ax.yaxis.set_tick_params(labelsize=20)
-    sm = plt.cm.ScalarMappable(cmap=cm)
+    ax.yaxis.set_tick_params(labelsize=20)    
+    norm = mpl.colors.Normalize(vmin=df.R0.min(), vmax=df.R0.max())
+    sm = plt.cm.ScalarMappable(cmap=plasma, norm=norm)
     sm._A = []
     cbar = plt.colorbar(sm, orientation='horizontal', cax=ax)
     cbar.ax.tick_params(labelsize=35) 
@@ -129,14 +136,13 @@ def plot_R0(df):
 
         
 def plot_annual_risks(df, kappa=1, n=1, wuhan_R0=3, region='global'):
-    cm = plt.cm.coolwarm                 
     fig = plt.figure(figsize=MAP_SIZE)
     ax = fig.add_subplot(1, 1, 1, projection=ccrs.PlateCarree())
     
     ax.scatter(df.origin_lon, 
                df.origin_lat,
-               color = cm(df.risk_i))
-    _add_features(ax)
+               color = jet(df.risk_i))
+    _add_features(ax, region=region)
     
     if kappa==1 and n==1 and wuhan_R0==3:
         _annotate(ax, text='b', color='r')
@@ -147,10 +153,12 @@ def plot_annual_risks(df, kappa=1, n=1, wuhan_R0=3, region='global'):
 
     
 def plot_cb(orientation='horizontal'):
-    cm = plt.cm.coolwarm                 
-    fig = plt.figure(figsize=CB_SIZE)
+    if orientation == 'horizontal':
+        fig = plt.figure(figsize=H_CB_SIZE)
+    else:
+        fig = plt.figure(figsize=V_CB_SIZE)
     ax = fig.add_subplot(1, 1, 1)
-    sm = plt.cm.ScalarMappable(cmap=cm)
+    sm = plt.cm.ScalarMappable(cmap=jet)
     sm._A = []
     cbar = plt.colorbar(sm, orientation=orientation, cax=ax)
     cbar.ax.tick_params(labelsize=35) 
@@ -168,16 +176,19 @@ def plot_geodesics(df, destinations, region):
     ax = plt.axes(projection=plateCr)
     
     mx = df.Prediction.max()
-    cutoff = 0.005 if region == 'global' else 0.075
+    if region == 'global':
+        cutoff = 0.005
+    else:
+        cutoff = 0.15
     opacity = np.maximum(df.Prediction.values/mx, cutoff)
     lines = plt.plot(df[['origin_lon', 'dest_lon']].T,
                      df[['origin_lat', 'dest_lat']].T, 
                      color='r',
                      transform=ccrs.Geodetic())
     [line.set_alpha(alpha) for alpha, line in zip(opacity, lines)]
-
+    
     _annotate(ax, text='a', color='r')
-    _add_features(ax)
+    _add_features(ax, region=region)
 
     plt.tight_layout()
     plt.savefig(f'./pix/{region}/geodesics.jpg', quality=QUALITY, dpi=DPI)
@@ -189,7 +200,7 @@ def plot_airports(airports, density):
     vis = airports.loc[airport_list]
     dd = np.log(1+density)
     fig, ax= plt.subplots(1,1, figsize=MAP_SIZE)
-    im = ax.imshow(dd, cmap=cm.gray)
+    im = ax.imshow(dd, cmap=gray)
     ax.scatter(vis.col_left, vis.row, label='Window', color='b')
     ax.scatter(vis.col_right, vis.row, color='b')
     ax.scatter(vis.col, vis.row_top, color='b')
@@ -221,7 +232,7 @@ def plot_density(specs):
     fig = plt.figure(figsize=MAP_SIZE)
     ax = plt.axes(projection=ccrs.PlateCarree())
     plt.contourf(lons, lats, np.log(1+density),
-                 transform=ccrs.PlateCarree(), cmap=cm.gray)# cmap='coolwarm')
+                 transform=ccrs.PlateCarree(), cmap=gray)
     ax.coastlines(color='w')
     ax.set_xticklabels([])
     ax.set_yticklabels([])
