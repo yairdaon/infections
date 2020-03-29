@@ -7,15 +7,18 @@ from functools import partial
 import os
 import pickle
 
+
 from geography import augment
 
+P_BASAL = 1e-5 ## Assumed frequency of Corona in entire population
+
 f = lambda p, kappa, R: (1-p) * np.power(1 + p * R / kappa, kappa) - 1
-def p_outbreak(kappa, n=1):
+def p_no_outbreak(kappa):
     if kappa > 1:
-        ##               1 - (1 - P(major outbreak introducing one infected individual   ))**n
-        return lambda R: 1 - (1 - (fsolve(lambda p: f(p, kappa, R), x0=np.array(0.99))[0]))**n
+        ##               1 - P(major outbreak introducing one infected individual   )
+        return lambda R: 1 - (fsolve(lambda p: f(p, kappa, R), x0=np.array(0.99))[0])
     else:
-        return lambda R: np.maximum(1 - 1/R**n, 0)
+        return lambda R: np.minimum(1/R, 1)
 
     
 def process(n, filename):
@@ -77,38 +80,40 @@ def load_travel(airports):
     return datas
 
 
-def augment_travel(travel, airports, destinations=None):
-    airport_p_outbreak = dict(zip(airports.index, airports.p_outbreak))
+def augment_travel(travel, airports, destinations=None, p_basal=P_BASAL):
+    airport_p_no_outbreak = dict(zip(airports.index, airports.p_no_outbreak_from_one))
     if destinations is not None:
         travel = travel.query("Dest in @destinations")
-    travel = travel.assign(dest_p_outbreak=travel.Dest.replace(airport_p_outbreak),
-                           outgoing_total=travel.groupby('Origin').Prediction.transform('sum'))
-    travel = travel.query('outgoing_total > 0').dropna()
-    travel['P_ij'] = travel.Prediction / travel.outgoing_total
-    travel['risk_ij'] = travel.P_ij * travel.dest_p_outbreak
-    travel['risk_i'] = travel.groupby('Origin').risk_ij.transform('sum').clip(lower=0, upper=1)
-    assert np.max(np.abs(travel.groupby('Origin').P_ij.sum()-1)) < 1e-9
+    p_no_outbreak_from_one = travel.Dest.replace(airport_p_no_outbreak)
+    p_no_outbreak = np.power(p_no_outbreak_from_one, travel.Prediction * p_basal) ## Per origin and destination
+    assert np.all(p_no_outbreak.values >= 0) and np.all(p_no_outbreak.values <= 1) 
+    travel = travel.assign(p_no_outbreak=p_no_outbreak)
+    travel['risk_ij'] = 1 - p_no_outbreak
+    travel['risk_i'] = 1 - travel.groupby('Origin').p_no_outbreak.transform('prod')
+    assert np.all(travel.risk_i.values >= 0) and np.all(travel.risk_i.values <= 1) 
     return travel
+    
 
 
-def calculate_outbreaks(airports, kappa, n):
-    f = p_outbreak(kappa, n)
+def calculate_p_no_outbreaks(airports, kappa):
+    f = p_no_outbreak(kappa)
     if kappa > 1:
         return airports.R0.apply(f)
     else:
         return f(airports.R0)
 
 if __name__ == '__main__':
-    kappas = [1, 1, 1, 1, 1, 1, 1, 2]
-    Rs     = [1, 2, 3, 4, 5, 2, 3, 2]
-    ns     = [1, 1, 1, 1, 1, 2, 2, 1]
+    kappas = [1, 1, 1, 1, 1, 2]
+    Rs     = [1, 2, 3, 4, 5, 2]
+
+    ## Sanity check
     for R in Rs:
-        p = p_outbreak(1, 1)(R/3)
-        p_eps = p_outbreak(1+1e-16, 1)(R/3)
-        assert abs(p-p_eps) < 1e-10, str(p) + '   ' + str(p_eps) 
-    for kappa, R, n in zip(kappas, Rs, ns):
-        p = p_outbreak(kappa, n=n)(R)
-        print(f'P(outbreak|R={R}, n={n}, kappa={int(kappa)}) = {p:2.3f}') 
+        p = p_no_outbreak(1)(R/3)
+        p_eps = p_no_outbreak(1+1e-10)(R/3)
+        assert abs(p-p_eps) < 1e-5, str(p) + '   ' + str(p_eps) 
+    for kappa, R in zip(kappas, Rs):
+        p = p_no_outbreak(kappa)(R)
+        print(f'P(no outbreak|R={R}, kappa={int(kappa)}) = {p:2.3f}') 
 
 
 

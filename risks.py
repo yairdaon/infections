@@ -8,9 +8,12 @@ import loaders
 import geography
 import visualization as vis
 
-P_B = 0.01 ## Basal probability of being infected with Corona
 
 def main(debug: ("Debug mode", 'flag', 'd')):
+    if debug:
+        vis.DPI = 50
+        vis.QUALITY = 75
+
     vis.plot_cb(orientation='horizontal')
     vis.plot_cb(orientation='vertical')
     vis.plot_p_outbreak()
@@ -26,13 +29,11 @@ def main(debug: ("Debug mode", 'flag', 'd')):
         R0s = [3]
         regions = ['global', 'africa', 'india']
         kappas = [1]
-        infected = [1]
     
     else:
         R0s = [2, 3, 4]
         regions = ['global', 'africa', 'india']
-        kappas   = [1, 3, 6, 1, 1]
-        infected = [1, 1, 1, 2, 3]
+        kappas   = [1, 3, 6]
 
 
     print('loading airport data')
@@ -66,17 +67,17 @@ def main(debug: ("Debug mode", 'flag', 'd')):
             airports['R0'] = airports.density * wuhan_factor
             vis.plot_R0(airports)
     
-            for kappa, n in tqdm(list(zip(kappas, infected))):
-                airports['p_outbreak'] = loaders.calculate_outbreaks(airports, kappa=kappa, n=n)
-
-                if kappa == 1 and n == 1 and wuhan_R0 == 3:
-                    cols = ['OAGName', 'Name', 'City', 'density', 'R0', 'p_outbreak']
-                    filename = f'./tables/{region}_airports_annual_wuhan{wuhan_R0}_n{n}_kappa{kappa}.csv'
-                    airports[cols].sort_values('R0', ascending=False).to_csv(filename, sep='\t')
+            for kappa in kappas:
+                airports['p_no_outbreak_from_one'] = loaders.calculate_p_no_outbreaks(airports, kappa=kappa)
+                airports['p_outbreak_from_one'] = 1 - airports.p_no_outbreak_from_one
+                if kappa == 1 and wuhan_R0 == 3:
+                    cols = ['OAGName', 'Name', 'City', 'density', 'R0', 'p_outbreak_from_one']
+                    filename = f'./tables/{region}_airports_annual_wuhan{wuhan_R0}_kappa{kappa}.csv'
+                    airports[cols].sort_values('p_outbreak_from_one', ascending=False).to_csv(filename, sep='\t')
 
                 tmp_travel = {k: loaders.augment_travel(df, airports, destinations=dest) for k, df in travel.items()}
-                vis.plot_annual_risks(tmp_travel['annual'], n=n, kappa=kappa, wuhan_R0=wuhan_R0, region=region)
-                vis.plot_monthly_risks(tmp_travel, kappa=kappa, n=n, wuhan_R0=wuhan_R0, region=region)
+                vis.plot_annual_risks(tmp_travel['annual'], kappa=kappa, wuhan_R0=wuhan_R0, region=region)
+                vis.plot_monthly_risks(tmp_travel, kappa=kappa, wuhan_R0=wuhan_R0, region=region)
                 
                 
     
