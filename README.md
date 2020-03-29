@@ -11,10 +11,13 @@ directory.
 
 Image processing - You can (but don't have to) install imagemagick,
 which is an open-source tool. If you run Ubuntu (or any Unix OS, I
-think, including MacOS) you shoudl be able to install it easily.
+think, including MacOS) you should be able to install it easily.
 
 Run the script - the bash script merger.sh just does everything, provided
 you have all the data in place. In Ubuntu, do
+
 chmod + x merger.sh
 ./merger.sh
-This should work in any Debian (probably), any Linux (possibly) MacOS (potentially) and Windows (actually, it won't).
+
+This should work in any Debian (probably), any Linux (possibly) MacOS
+(potentially) and Windows (actually, it won't).

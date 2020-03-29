@@ -2,7 +2,6 @@ import pdb
 from itertools import product
 import numpy as np
 import pandas as pd
-from tqdm import tqdm
 
 import loaders
 import geography
