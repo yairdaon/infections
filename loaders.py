@@ -10,7 +10,7 @@ import pickle
 
 from geography import augment
 
-P_BASAL = 1e-5 ## Assumed frequency of Corona in entire population
+P_BASAL = 1e-6 ## Assumed frequency of Corona in entire population
 
 f = lambda p, kappa, R: (1-p) * np.power(1 + p * R / kappa, kappa) - 1
 def p_no_outbreak(kappa):
@@ -86,8 +86,7 @@ def augment_travel(travel, airports, destinations=None, p_basal=P_BASAL):
         travel = travel.query("Dest in @destinations")
     p_no_outbreak_from_one = travel.Dest.replace(airport_p_no_outbreak)
     p_no_outbreak = np.power(p_no_outbreak_from_one, travel.Prediction * p_basal) ## Per origin and destination
-    assert np.all(p_no_outbreak.values >= 0) and np.all(p_no_outbreak.values <= 1) 
-    travel = travel.assign(p_no_outbreak=p_no_outbreak)
+    travel = travel.assign(p_no_outbreak=p_no_outbreak.clip(0,1))
     travel['risk_ij'] = 1 - p_no_outbreak
     travel['risk_i'] = 1 - travel.groupby('Origin').p_no_outbreak.transform('prod')
     assert np.all(travel.risk_i.values >= 0) and np.all(travel.risk_i.values <= 1) 

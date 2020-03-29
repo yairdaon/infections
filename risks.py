@@ -41,8 +41,7 @@ def main(debug: ("Debug mode", 'flag', 'd')):
     if debug:
         airports = airports.loc[vis.airport_list]
 
-    vis.plot_airports(airports, specs['data'])
-        
+    vis.plot_airports(airports, specs['data'])        
     
     travel = loaders.load_travel(airports)
     times = ['annual', 1, 4, 7, 10]
@@ -55,29 +54,29 @@ def main(debug: ("Debug mode", 'flag', 'd')):
     dest_dict['africa'] = np.intersect1d(valid, destinations.query('continent == "AF"').iata_code.dropna().unique())
     dest_dict['india']  = np.intersect1d(valid, destinations.query('iso_country == "IN"').iata_code.dropna().unique())
     dest_dict['global'] = valid
-
-    for region in regions:
-        print()
-        print('Making', region, 'plots')
-        dest = dest_dict[region]
-        vis.plot_geodesics(travel['annual'], destinations=dest, region=region) 
-
-        for wuhan_R0 in R0s:
-            wuhan_factor =  wuhan_R0 / airports.loc['WUH', 'density'] # R_0 / density for Wuhan
-            airports['R0'] = airports.density * wuhan_factor
-            vis.plot_R0(airports)
     
-            for kappa in kappas:
-                airports['p_no_outbreak_from_one'] = loaders.calculate_p_no_outbreaks(airports, kappa=kappa)
-                airports['p_outbreak_from_one'] = 1 - airports.p_no_outbreak_from_one
+    for wuhan_R0 in R0s:
+        wuhan_factor =  wuhan_R0 / airports.loc['WUH', 'density'] # R_0 / density for Wuhan
+        airports['R0'] = airports.density * wuhan_factor
+
+        for kappa in kappas:
+            airports['p_no_outbreak_from_one'] = loaders.calculate_p_no_outbreaks(airports, kappa=kappa)
+            airports['p_outbreak_from_one'] = 1 - airports.p_no_outbreak_from_one
+            if wuhan_R0 == 3 and kappa == 1:
+                vis.plot_airport_risks(airports, wuhan_R0=wuhan_R0, kappa=kappa)
+           
+            for region in regions:
+                dest = dest_dict[region]
+                tmp_travel = {k: loaders.augment_travel(df, airports, destinations=dest) for k, df in travel.items()}
+                vis.plot_annual_risks(tmp_travel['annual'], kappa=kappa, wuhan_R0=wuhan_R0, region=region)
+                vis.plot_monthly_risks(tmp_travel, kappa=kappa, wuhan_R0=wuhan_R0, region=region)
                 if kappa == 1 and wuhan_R0 == 3:
                     cols = ['OAGName', 'Name', 'City', 'density', 'R0', 'p_outbreak_from_one']
                     filename = f'./tables/{region}_airports_annual_wuhan{wuhan_R0}_kappa{kappa}.csv'
                     airports[cols].sort_values('p_outbreak_from_one', ascending=False).to_csv(filename, sep='\t')
-
-                tmp_travel = {k: loaders.augment_travel(df, airports, destinations=dest) for k, df in travel.items()}
-                vis.plot_annual_risks(tmp_travel['annual'], kappa=kappa, wuhan_R0=wuhan_R0, region=region)
-                vis.plot_monthly_risks(tmp_travel, kappa=kappa, wuhan_R0=wuhan_R0, region=region)
+                    vis.plot_geodesics(tmp_travel['annual'], destinations=dest, region=region) 
+                                    
+    
                 
                 
     

@@ -61,7 +61,7 @@ V_CB_SIZE=(2,20)
 
 TICK_FONT_SIZE=22
 QUALITY=95
-DPI=400
+DPI=200
 
 
 def _add_features(ax, region='global'):
@@ -112,30 +112,29 @@ def plot_monthly_risks(travel, kappa=1, wuhan_R0=3, region='global'):
     plt.close('all')
 
     
-def plot_R0(df):
-    wuhan_R0 = int(df.loc['WUH', 'R0'])
+def plot_airport_risks(df, wuhan_R0=3, kappa=1):
     fig = plt.figure(figsize=MAP_SIZE)
     ax = fig.add_subplot(1, 1, 1, projection=ccrs.PlateCarree())
     
     ax.scatter(df.Lon, 
                df.Lat,
-               color = plasma(df.R0))
+               color = plasma(df.p_outbreak_from_one))
     _add_features(ax)
     plt.tight_layout()
-    plt.savefig(f'./pix/R0_wuhan{wuhan_R0}.jpg', quality=QUALITY, dpi=DPI)
+    plt.savefig(f'./pix/airports_p_outbreak_from_one_wuhan{wuhan_R0}_kappa{kappa}.jpg', quality=QUALITY, dpi=DPI)
     plt.close('all')
 
     
     fig = plt.figure(figsize=H_CB_SIZE)
     ax = fig.add_subplot()
     ax.yaxis.set_tick_params(labelsize=20)    
-    norm = mpl.colors.Normalize(vmin=df.R0.min(), vmax=df.R0.max())
-    sm = plt.cm.ScalarMappable(cmap=plasma, norm=norm)
+    #norm = mpl.colors.Normalize(vmin=df.R0.min(), vmax=df.R0.max())
+    sm = plt.cm.ScalarMappable(cmap=plasma)#, norm=norm)
     sm._A = []
     cbar = plt.colorbar(sm, orientation='horizontal', cax=ax)
     cbar.ax.tick_params(labelsize=35) 
     plt.tight_layout()
-    plt.savefig(f'./pix/R0_wuhan{wuhan_R0}_cb.jpg', quality=QUALITY, dpi=DPI)
+    plt.savefig(f'./pix/airports_p_outbreak_from_one_wuhan{wuhan_R0}_kappa{kappa}_cb.jpg', quality=QUALITY, dpi=DPI)
     plt.close('all')
     
         
@@ -183,12 +182,12 @@ def plot_geodesics(df, destinations, region):
     plateCr._threshold = plateCr._threshold/10.
     ax = plt.axes(projection=plateCr)
     
-    mx = df.Prediction.max()
+    #mx = df.Prediction.max()
     if region == 'global':
         cutoff = 0.005
     else:
-        cutoff = 0.15
-    opacity = np.maximum(df.Prediction.values/mx, cutoff)
+        cutoff = 0.1
+    opacity = np.maximum(df.risk_ij, cutoff)
     lines = plt.plot(df[['origin_lon', 'dest_lon']].T,
                      df[['origin_lat', 'dest_lat']].T, 
                      color='r',
