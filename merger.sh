@@ -23,3 +23,4 @@ convert pix/airports_p_outbreak_from_one_wuhan3_kappa1.jpg pix/airports_p_outbre
 
 ## Move images back where they belong
 mv fig*.jpg pix/
+rm -rvf **/**/*~
