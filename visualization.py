@@ -65,7 +65,6 @@ DPI=200
 
 
 def _add_features(ax, region='global'):
-    #ax.set_extent([XLIM[0], XLIM[1], YLIM[0], YLIM[1]], crs=ccrs.PlateCarree())
     ax.set_ylim(*YLIM)
     ax.set_xlim(*XLIMS[region])
     ax.add_feature(cfeature.BORDERS)
@@ -153,10 +152,6 @@ def plot_annual_risks(df, kappa=1, wuhan_R0=3, region='global'):
     plt.tight_layout()
     plt.savefig(f'./pix/{region}/risks_annual_wuhan{wuhan_R0}_kappa{kappa}.jpg', quality=QUALITY, dpi=DPI)
     plt.close('all')
-
-    if kappa == 1 and wuhan_R0 == 3:
-        cols = ['Origin', 'Dest', 'risk_i', 'risk_ij', 'Prediction']
-        df[cols].sort_values('risk_i', ascending=False).to_csv(f'./tables/{region}_risks_annual_wuhan{wuhan_R0}_kappa{kappa}.csv', sep ='\t')
 
     
 def plot_cb(orientation='horizontal'):

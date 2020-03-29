@@ -21,12 +21,39 @@ def p_no_outbreak(kappa):
         return lambda R: np.minimum(1/R, 1)
 
     
+def get_destinations_dict(valid):
+    '''get data from https://ourairports.com/data/'''
+    destinations = pd.read_csv('./data/airports.csv')
+    dest_dict = {}
+    dest_dict['africa'] = np.intersect1d(valid, destinations.query('continent == "AF"').iata_code.dropna().unique())
+    dest_dict['india']  = np.intersect1d(valid, destinations.query('iso_country == "IN"').iata_code.dropna().unique())
+    dest_dict['global'] = valid
+    return dest_dict
+
+
+def desc_from_iata_code(data, col):
+    '''get data from https://ourairports.com/data/'''
+    df = pd.read_csv('./data/airports.csv')
+    df = df.loc[~pd.isnull(df.iata_code)]
+    muni = dict(zip(df.iata_code, df.municipality))
+    name = dict(zip(df.iata_code, df.name))
+    region = dict(zip(df.iata_code, df.iso_region))
+
+    return data.assign(municipality=data[col].replace(muni),
+                       name=data[col].replace(name),
+                       region=data[col].replace(region))
+
+    
 def process(n, filename):
     line = gl(filename, n).replace('\n','').split(' ')
     return line[0], line[-1]
 
 
 def load_density():
+    '''Get data from Nasa's gridded population of the world 
+    https://sedac.ciesin.columbia.edu/data/set/gpw-v4-population-density-adjusted-to-2015-unwpp-country-totals-rev11
+    '''
+
     filename = './data/gpw_v4_population_density_rev11_2020_2pt5_min.asc'
     pick_name = filename.replace('asc','pickle')
     if os.path.exists(pick_name):
@@ -45,6 +72,10 @@ def load_density():
 
 
 def load_airports(specs):
+    '''Data in supplementary of: Modeling monthly flows of global air
+    travel passengers: An open-accessdata resource
+    '''
+
     filename = './data/AirportInfo.csv'
     pick_name = filename.replace('csv', 'pickle')
     if os.path.exists(pick_name):
@@ -63,6 +94,10 @@ def load_airports(specs):
 
 
 def load_travel(airports):
+    '''Data in supplementary of: Modeling monthly flows of global air
+    travel passengers: An open-accessdata resource
+    '''
+
     filename = './data/Prediction_Monthly.csv'
     travel = pd.read_csv(filename)
     nodes = airports.NodeName.values
@@ -92,7 +127,6 @@ def augment_travel(travel, airports, destinations=None, p_basal=P_BASAL):
     assert np.all(travel.risk_i.values >= 0) and np.all(travel.risk_i.values <= 1) 
     return travel
     
-
 
 def calculate_p_no_outbreaks(airports, kappa):
     f = p_no_outbreak(kappa)

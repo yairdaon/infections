@@ -5,6 +5,7 @@ import pdb
 
 RADIUS = 6371
 
+
 def deg_dist_at_lat(lat): ## Latitude in degrees!
     assert lat >= -90 and lat <= 90
     return math.cos(lat * 2 * math.pi / 360) * RADIUS * 2 * math.pi / 360
