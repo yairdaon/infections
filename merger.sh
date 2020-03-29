@@ -1,6 +1,8 @@
 #!/bin/bash
 rm -rvf pix/*
+rm -rvf tables/*
 python3 risks.py
+
 
 ## Trim everybody
 find . -name '*.jpg' -exec mogrify -trim \> {} \;
@@ -21,4 +23,3 @@ convert pix/R0_wuhan3.jpg pix/R0_wuhan3_cb.jpg -append fig_R0.jpg
 
 ## Move images back where they belong
 mv fig*.jpg pix/
-

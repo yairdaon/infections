@@ -4,5 +4,7 @@
 *.png
 data/*
 pix/*
+tables/*
+china_infections
 .ipynb_checkpoints
 __*

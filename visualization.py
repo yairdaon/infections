@@ -26,6 +26,8 @@ for lib in ['pix']:
         os.mkdir(f'./{lib}/india')
     if not os.path.exists(f'./{lib}/global'):
         os.mkdir(f'./{lib}/global')
+if not os.path.exists(f'./tables'):
+    os.mkdir(f'./tables')
 
     
 airport_list = ['JFK', 'EWR', 'LGA', #NYC
@@ -123,6 +125,7 @@ def plot_R0(df):
     plt.savefig(f'./pix/R0_wuhan{wuhan_R0}.jpg', quality=QUALITY, dpi=DPI)
     plt.close('all')
 
+    
     fig = plt.figure(figsize=H_CB_SIZE)
     ax = fig.add_subplot()
     ax.yaxis.set_tick_params(labelsize=20)    
@@ -134,7 +137,7 @@ def plot_R0(df):
     plt.tight_layout()
     plt.savefig(f'./pix/R0_wuhan{wuhan_R0}_cb.jpg', quality=QUALITY, dpi=DPI)
     plt.close('all')
-
+    
         
 def plot_annual_risks(df, kappa=1, n=1, wuhan_R0=3, region='global'):
     fig = plt.figure(figsize=MAP_SIZE)
@@ -151,6 +154,10 @@ def plot_annual_risks(df, kappa=1, n=1, wuhan_R0=3, region='global'):
     plt.tight_layout()
     plt.savefig(f'./pix/{region}/risks_annual_wuhan{wuhan_R0}_n{n}_kappa{kappa}.jpg', quality=QUALITY, dpi=DPI)
     plt.close('all')
+
+    if kappa == 1 and n == 1 and wuhan_R0 == 3:
+        cols = ['Origin', 'Dest', 'risk_i', 'Prediction', 'dest_p_outbreak', 'outgoing_total', 'P_ij', 'risk_ij']
+        df[cols].sort_values('risk_i', ascending=False).to_csv(f'./tables/{region}_risks_annual_wuhan{wuhan_R0}_n{n}_kappa{kappa}.csv', sep ='\t')
 
     
 def plot_cb(orientation='horizontal'):

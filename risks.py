@@ -8,6 +8,7 @@ import loaders
 import geography
 import visualization as vis
 
+P_B = 0.01 ## Basal probability of being infected with Corona
 
 def main(debug: ("Debug mode", 'flag', 'd')):
     vis.plot_cb(orientation='horizontal')
@@ -67,6 +68,12 @@ def main(debug: ("Debug mode", 'flag', 'd')):
     
             for kappa, n in tqdm(list(zip(kappas, infected))):
                 airports['p_outbreak'] = loaders.calculate_outbreaks(airports, kappa=kappa, n=n)
+
+                if kappa == 1 and n == 1 and wuhan_R0 == 3:
+                    cols = ['OAGName', 'Name', 'City', 'density', 'R0', 'p_outbreak']
+                    filename = f'./tables/{region}_airports_annual_wuhan{wuhan_R0}_n{n}_kappa{kappa}.csv'
+                    airports[cols].sort_values('R0', ascending=False).to_csv(filename, sep='\t')
+
                 tmp_travel = {k: loaders.augment_travel(df, airports, destinations=dest) for k, df in travel.items()}
                 vis.plot_annual_risks(tmp_travel['annual'], n=n, kappa=kappa, wuhan_R0=wuhan_R0, region=region)
                 vis.plot_monthly_risks(tmp_travel, kappa=kappa, n=n, wuhan_R0=wuhan_R0, region=region)
