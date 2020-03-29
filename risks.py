@@ -10,10 +10,6 @@ import visualization as vis
 
 
 def main(debug: ("Debug mode", 'flag', 'd')):
-    if debug:
-        vis.DPI=50
-        vis.QUALITY=75
-
     vis.plot_cb(orientation='horizontal')
     vis.plot_cb(orientation='vertical')
     vis.plot_p_outbreak()
@@ -27,7 +23,6 @@ def main(debug: ("Debug mode", 'flag', 'd')):
 
     if debug:
         R0s = [3]
-        regions = ['global']
         regions = ['global', 'africa', 'india']
         kappas = [1]
         infected = [1]
@@ -44,8 +39,7 @@ def main(debug: ("Debug mode", 'flag', 'd')):
     if debug:
         airports = airports.loc[vis.airport_list]
 
-    # if debug:
-    #     vis.plot_airports(airports, specs['data'])
+    vis.plot_airports(airports, specs['data'])
         
     
     travel = loaders.load_travel(airports)

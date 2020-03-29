@@ -49,7 +49,7 @@ airport_list = ['JFK', 'EWR', 'LGA', #NYC
                ]
 
 XLIMS={'global':[-180,180],
-       'africa':[-100,180],
+       'africa':[-100,160],
        'india':[-90,145]}
 YLIM=[-90+36,90-6]
 
@@ -59,7 +59,7 @@ V_CB_SIZE=(2,20)
 
 TICK_FONT_SIZE=22
 QUALITY=95
-DPI=200
+DPI=400
 
 
 def _add_features(ax, region='global'):
@@ -69,20 +69,21 @@ def _add_features(ax, region='global'):
     ax.add_feature(cfeature.BORDERS)
     ax.add_feature(cfeature.STATES)
     ax.add_feature(cfeature.COASTLINE)
-    # ax.set_xticklabels([])
-    # ax.set_yticklabels([])
+    ax.set_xticklabels([])
+    ax.set_yticklabels([])
     return ax
 
 
-def _annotate(ax, text, color):
-    #ax.text(XLIM[0]+5, YLIM[0]+5, text, fontsize=50, color='k')
-    pass
+def _annotate(ax, text, color, region):
+    xlim = XLIMS[region]
+    ax.text(xlim[0]+5, YLIM[0]+5, text, fontsize=50, color='k')
+    
     
 def plot_monthly_risks(travel, kappa=1, n=1, wuhan_R0=3, region='global'):
     def make_it(ax, df, month):
         ax.scatter(df.origin_lon, df.origin_lat, color=jet(df.risk_i))
         _add_features(ax)
-        _annotate(ax, text=month, color='r')
+        _annotate(ax, text=month, color='k', region='global')
        
 
     fig = plt.figure(figsize=MAP_SIZE)
@@ -145,7 +146,7 @@ def plot_annual_risks(df, kappa=1, n=1, wuhan_R0=3, region='global'):
     _add_features(ax, region=region)
     
     if kappa==1 and n==1 and wuhan_R0==3:
-        _annotate(ax, text='b', color='r')
+        _annotate(ax, text='b', color='k', region=region)
 
     plt.tight_layout()
     plt.savefig(f'./pix/{region}/risks_annual_wuhan{wuhan_R0}_n{n}_kappa{kappa}.jpg', quality=QUALITY, dpi=DPI)
@@ -187,7 +188,7 @@ def plot_geodesics(df, destinations, region):
                      transform=ccrs.Geodetic())
     [line.set_alpha(alpha) for alpha, line in zip(opacity, lines)]
     
-    _annotate(ax, text='a', color='r')
+    _annotate(ax, text='a', color='k', region=region)
     _add_features(ax, region=region)
 
     plt.tight_layout()
