@@ -120,7 +120,7 @@ def augment_travel(travel, airports, destinations=None, p_basal=P_BASAL):
     if destinations is not None:
         travel = travel.query("Dest in @destinations")
     p_no_outbreak_from_one = travel.Dest.replace(airport_p_no_outbreak)
-    p_no_outbreak = np.power(p_no_outbreak_from_one, travel.Prediction * p_basal) ## Per origin and destination
+    p_no_outbreak = np.power(1 - p_basal * (1-p_no_outbreak_from_one), travel.Prediction) ## Per origin and destination
     travel = travel.assign(p_no_outbreak=p_no_outbreak.clip(0,1))
     travel['risk_ij'] = 1 - p_no_outbreak
     travel['risk_i'] = 1 - travel.groupby('Origin').p_no_outbreak.transform('prod')
