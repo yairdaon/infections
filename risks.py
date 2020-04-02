@@ -49,6 +49,7 @@ def main(debug: ("Debug mode", 'flag', 'd')):
     ## Get vailid destinations for every region
     valid = airports.NodeName.values
     dest_dict = loaders.get_destinations_dict(valid)
+
     
     for wuhan_R0 in R0s:
         wuhan_factor =  wuhan_R0 / airports.loc['WUH', 'density'] # R_0 / density for Wuhan
@@ -78,8 +79,13 @@ def main(debug: ("Debug mode", 'flag', 'd')):
                     df = loaders.desc_from_iata_code(df, 'Origin')
                     df.to_csv(f'./tables/{region}_risks_annual_wuhan{wuhan_R0}_kappa{kappa}.csv', sep ='\t')
 
-                
-                
+                    if region == 'global':
+                        with open('./tables/percentiles.txt', 'a') as f:
+                            print(f'Average risk for airports by continent of flight origin:', file=f)
+                            print(df.groupby('continent').risk_i.mean().sort_values(ascending=False), file=f)
+
+                        tmp_travel['annual'].to_csv('./tables/results.csv')
+                        
     
     
 if __name__ == '__main__':

@@ -33,15 +33,17 @@ def get_destinations_dict(valid):
 
 def desc_from_iata_code(data, col):
     '''get data from https://ourairports.com/data/'''
-    df = pd.read_csv('./data/airports.csv')
+    df = pd.read_csv('./data/airports.csv', keep_default_na=False)
     df = df.loc[~pd.isnull(df.iata_code)]
     muni = dict(zip(df.iata_code, df.municipality))
     name = dict(zip(df.iata_code, df.name))
     region = dict(zip(df.iata_code, df.iso_region))
+    continent = dict(zip(df.iata_code, df.continent))
 
-    return data.assign(municipality=data[col].replace(muni),
-                       name=data[col].replace(name),
-                       region=data[col].replace(region))
+    return data.assign(municipality=data[col].map(muni),
+                       name=data[col].map(name),
+                       region=data[col].map(region),
+                       continent=data[col].map(continent))
 
     
 def process(n, filename):
