@@ -2,7 +2,7 @@ import numpy as np
 from scipy.optimize import fsolve
 import matplotlib as mpl
 from matplotlib import pyplot as plt
-from matplotlib.cm import jet, gray, plasma 
+from matplotlib.cm import  gray, plasma 
 from matplotlib import gridspec
 import pdb
 from functools import partial
@@ -29,9 +29,9 @@ for lib in ['pix']:
 if not os.path.exists(f'./tables'):
     os.mkdir(f'./tables')
 
-    
+################ Constants #############################    
 airport_list = ['JFK', 'EWR', 'LGA', #NYC
-                #'PUQ', 
+                #'PUQ', ## Shithole in south Chile
                 #'HNL', # Hawaii
                 'NRT', 'HND',# Tokyo
                 #'FRA', #Frankfurt
@@ -42,26 +42,25 @@ airport_list = ['JFK', 'EWR', 'LGA', #NYC
                 #'TLV', 'SDV', 
                 'WUH', #Wuhan
                 'ICN', # Seoul
-                'DEL', 
+                'DEL', # New Delhi
                 #'CDG', 'ORY', #Paris
                 'LTN', 'LHR', 'LGW', #London
                 'TXL', 'SXF', #Berlin
                 #'SFO', 'SJC', 'OAK', #San Francisco
                 #'MIA', 'FLL' #Miami
                ]
-
 XLIMS={'global':[-180,180],
        'africa':[-100,160],
        'india':[-90,145]}
 YLIM=[-90+36,90-6]
-
 MAP_SIZE = np.array([20, 10])
 H_CB_SIZE=(20,2)
 V_CB_SIZE=(2,20)
-
 TICK_FONT_SIZE=22
 QUALITY=95
 DPI=200
+DOT_SIZE=30
+VMAX = {'global': 0.75, 'africa': 0.1, 'india': 0.5}
 
 
 def _add_features(ax, region='global'):
@@ -81,8 +80,13 @@ def _annotate(ax, text, color, region):
     
     
 def plot_monthly_risks(travel, kappa=1, wuhan_R0=3, region='global'):
+    norm = mpl.colors.Normalize(vmin=0, vmax=VMAX[region], clip=True)
     def make_it(ax, df, month):
-        ax.scatter(df.origin_lon, df.origin_lat, color=jet(df.risk_i))
+        
+        ax.scatter(df.origin_lon,
+                   df.origin_lat,
+                   color=plasma(norm(df.risk_i)),
+                   s=DOT_SIZE)
         _add_features(ax)
         _annotate(ax, text=month, color='k', region='global')
        
@@ -114,10 +118,11 @@ def plot_monthly_risks(travel, kappa=1, wuhan_R0=3, region='global'):
 def plot_airport_risks(df, wuhan_R0=3, kappa=1):
     fig = plt.figure(figsize=MAP_SIZE)
     ax = fig.add_subplot(1, 1, 1, projection=ccrs.PlateCarree())
-    
+    norm = mpl.colors.Normalize(vmin=0, vmax=0.5, clip=True)
     ax.scatter(df.Lon, 
                df.Lat,
-               color = plasma(df.p_outbreak_from_one))
+               color = plasma(norm(df.p_outbreak_from_one)),
+               s=DOT_SIZE)
     _add_features(ax)
     plt.tight_layout()
     plt.savefig(f'./pix/airports_p_outbreak_from_one_wuhan{wuhan_R0}_kappa{kappa}.jpg', quality=QUALITY, dpi=DPI)
@@ -127,8 +132,7 @@ def plot_airport_risks(df, wuhan_R0=3, kappa=1):
     fig = plt.figure(figsize=H_CB_SIZE)
     ax = fig.add_subplot()
     ax.yaxis.set_tick_params(labelsize=20)    
-    #norm = mpl.colors.Normalize(vmin=df.R0.min(), vmax=df.R0.max())
-    sm = plt.cm.ScalarMappable(cmap=plasma)#, norm=norm)
+    sm = plt.cm.ScalarMappable(cmap=plasma, norm=norm)
     sm._A = []
     cbar = plt.colorbar(sm, orientation='horizontal', cax=ax)
     cbar.ax.tick_params(labelsize=35) 
@@ -137,35 +141,37 @@ def plot_airport_risks(df, wuhan_R0=3, kappa=1):
     plt.close('all')
     
         
-def plot_annual_risks(df, kappa=1, wuhan_R0=3, region='global'):
+def plot_rep_risks(df, kappa=1, wuhan_R0=3, region='global'):
     fig = plt.figure(figsize=MAP_SIZE)
     ax = fig.add_subplot(1, 1, 1, projection=ccrs.PlateCarree())
-    
+    norm = mpl.colors.Normalize(vmin=0, vmax=VMAX[region], clip=True)
     ax.scatter(df.origin_lon, 
                df.origin_lat,
-               color = jet(df.risk_i))
+               color = plasma(norm(df.risk_i)),
+               s=DOT_SIZE)
     _add_features(ax, region=region)
     
     if kappa==1 and wuhan_R0==3:
         _annotate(ax, text='b', color='k', region=region)
 
     plt.tight_layout()
-    plt.savefig(f'./pix/{region}/risks_annual_wuhan{wuhan_R0}_kappa{kappa}.jpg', quality=QUALITY, dpi=DPI)
+    plt.savefig(f'./pix/{region}/risks_rep_wuhan{wuhan_R0}_kappa{kappa}.jpg', quality=QUALITY, dpi=DPI)
     plt.close('all')
 
     
-def plot_cb(orientation='horizontal'):
+def plot_cb(orientation='horizontal', region='global'):
     if orientation == 'horizontal':
         fig = plt.figure(figsize=H_CB_SIZE)
     else:
         fig = plt.figure(figsize=V_CB_SIZE)
+    norm = mpl.colors.Normalize(vmin=0, vmax=VMAX[region], clip=True)
     ax = fig.add_subplot(1, 1, 1)
-    sm = plt.cm.ScalarMappable(cmap=jet)
+    sm = plt.cm.ScalarMappable(cmap=plasma, norm=norm)
     sm._A = []
     cbar = plt.colorbar(sm, orientation=orientation, cax=ax)
     cbar.ax.tick_params(labelsize=35) 
     plt.tight_layout()
-    plt.savefig(f'./pix/cb_{orientation}.jpg', quality=QUALITY, dpi=DPI)
+    plt.savefig(f'./pix/cb_{region}_{orientation}.jpg', quality=QUALITY, dpi=DPI)
     plt.close('all')
 
     
@@ -263,10 +269,10 @@ def plot_p_outbreak(n=5):
         plt.scatter(root, 0)
     
     plt.legend()
-    ## plt.suptitle("Plots of $f(p) = (1-p)( 1 + pR / \kappa)^{\kappa} - 1$", fontsize=22)
+    
     plt.hlines(y=0, xmin=0, xmax=1)
     plt.xlabel('p')
-    plt.ylabel('f')
+    plt.ylabel(r'$f(p) = (1-p)( 1 + pR / \kappa)^{\kappa} - 1$"')
     plt.tight_layout()
     plt.savefig('./pix/p_outbreak.jpg', quality=QUALITY, dpi=DPI)
     plt.close('all')

@@ -82,16 +82,19 @@ def load_airports(specs):
     pick_name = filename.replace('csv', 'pickle')
     if os.path.exists(pick_name):
         with open(pick_name,'rb') as f:
-            return pickle.load(f)
-        
-    airports = pd.read_csv(filename)
-    g = lambda lat, lon: augment(lon=lon, lat=lat, specs=specs)
-    airports = [{**row, **g(lat=row['Lat'], lon=row['Lon'])} for _, row in airports.iterrows()]
-    airports = pd.DataFrame(airports)
-    airports.index = airports.NodeName.astype(str)
-    with open(pick_name,'wb') as f:
-        return pickle.dump(airports, f)
-    
+            airports = pickle.load(f)
+    else:
+        airports = pd.read_csv(filename)
+        g = lambda lat, lon: augment(lon=lon, lat=lat, specs=specs)
+        airports = [{**row, **g(lat=row['Lat'], lon=row['Lon'])} for _, row in airports.iterrows()]
+        airports = pd.DataFrame(airports)
+        airports.index = airports.NodeName.astype(str)
+        with open(pick_name,'wb') as f:
+            pickle.dump(airports, f)
+
+        ## Save csv
+        airports[['OAGName', 'Name', 'Lon', 'Lat', 'density']].to_csv(filename.replace('data', 'tables'))
+
     return airports
 
 
@@ -100,7 +103,7 @@ def load_travel(airports):
     travel passengers: An open-accessdata resource
     '''
 
-    filename = './data/Prediction_Monthly.csv'
+    filename = './data/Prediction_Monthly.csv'    
     travel = pd.read_csv(filename)
     nodes = airports.NodeName.values
     travel = travel.query('Origin in @nodes and Dest in @nodes')    
@@ -108,14 +111,14 @@ def load_travel(airports):
                            origin_lat=travel.Origin.replace(airports.Lat),
                            dest_lon=travel.Dest.replace(airports.Lon),
                            dest_lat=travel.Dest.replace(airports.Lat))
-    annual = travel.groupby(['Origin', 'Dest']).mean().reset_index(drop=False).drop('Month',axis=1)
-    annual['Prediction'] = (annual.Prediction * 12).astype(int)
-    annual['upper'] = (annual.upper * 12).astype(int)
-    annual['lower'] = (annual.lower * 12).astype(int)
-    datas = {month: data for month, data in travel.groupby('Month')}
-    datas['annual'] = annual
-    return datas
-
+    # annual = travel.groupby(['Origin', 'Dest']).mean().reset_index(drop=False).drop('Month',axis=1)
+    # annual['Prediction'] = annual.Prediction.astype(int) 
+    # annual['upper'] = annual.upper.astype(int)
+    # annual['lower'] = annual.lower.astype(int)
+    # datas = {month: data for month, data in travel.groupby('Month')}
+    # datas['annual'] = annual
+    # return datas
+    return travel
 
 def augment_travel(travel, airports, destinations=None, p_basal=P_BASAL):
     airport_p_no_outbreak = dict(zip(airports.index, airports.p_no_outbreak_from_one))
