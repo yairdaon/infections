@@ -1,4 +1,5 @@
 \documentclass{amsproc}
+\usepackage[margin=0.5in]{geometry}
 \begin{document}
 
 \section{Statement}
@@ -14,23 +15,23 @@ NO(q,a;N) = \prod_{i=1}^{N} (1 - qp_i)^{n_{ai}},
 $$
 
 We want to prove that if there is a single $q_0$ that orders the
-probabilities $NO(q_0,a;N), N)(q_0,b;N)$ --- then the same order
+probabilities $NO(q_0,a;N), NO(q_0,b;N)$ --- then the same order
 remains for any other choice of $q \in (0,1)$. Formally, we need to
 prove the following implication for all $N \in \mathbb{N}$:
 
 $$
-\exists q_0\in (0,1)\ s.t. NO(q_0,a;n) \geq NO(q_0,b;n) \Rightarrow \forall n\in \mathbb{N} \forall q \in (0,1) NO(q,a;n) \geq NO(q,b;n).
+\exists q_0\in (0,1)\ s.t.\ NO(q_0,a;N) \geq NO(q_0,b;N) \Rightarrow \forall q \in (0,1)\ NO(q,a;n) \geq NO(q,b;n).
 $$
 
 
-\section{Proof}
+\section{Proof - Unfortunately this proof is wrong and the statement does not hold}
 We continue by induction.
 
 \subsection{Induction Basis}
 For the induction basis we want to show that the statement holds for
 $N=1$. This amounts to proving the following implication holds:
 $$
-\exists q_0 \in (0,1)\ s.t.\ q(1-q_0p_1)^{n_{a1}} \geq (1-q_0p_1)^{n_{b1}} \Rightarrow  \forall q \in (0,1)\  (1-qp_1)^{n_{a1}} \geq (1-qp_1)^{n_{b1}}.
+\exists q_0 \in (0,1)\ s.t.\ (1-q_0p_1)^{n_{a1}} \geq (1-q_0p_1)^{n_{b1}} \Rightarrow  \forall q \in (0,1)\  (1-qp_1)^{n_{a1}} \geq (1-qp_1)^{n_{b1}}.
 $$
 
 Taking $\log$ of the LHS, and recalling that $(1-q_0p_1) < 1$, we get

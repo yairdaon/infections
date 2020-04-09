@@ -67,7 +67,7 @@ def main(debug: ("Debug mode", 'flag', 'd'),
             if wuhan_R0 == 3 and kappa == 1:
                 vis.plot_airport_risks(airports, wuhan_R0=wuhan_R0, kappa=kappa)
                 cols = ['OAGName', 'Name', 'City', 'density', 'R0', 'p_outbreak_from_one']
-                filename = f'./tables/airports_rep_wuhan{wuhan_R0}_kappa{kappa}.csv'
+                filename = f'./tables/TableS2.csv'
                 airports[cols].sort_values('p_outbreak_from_one', ascending=False).to_csv(filename)
 
             for region in regions:
@@ -84,20 +84,26 @@ def main(debug: ("Debug mode", 'flag', 'd'),
                     df = tmp_travel[10][['Origin', 'risk_i']].drop_duplicates()
                     df = df.sort_values('risk_i', ascending=False)
                     df = loaders.desc_from_iata_code(df, 'Origin').set_index('Origin', drop=True)
-                    df.to_csv(f'./tables/{region}_risks_rep_wuhan{wuhan_R0}_kappa{kappa}.csv')
-                    
+                    df.to_csv(f'./tables/TableS1.csv')
+
                     if region == 'global':
                         with open('./tables/percentiles.txt', 'a') as f:
                             print(f'Average risk for airports by continent of flight origin:', file=f)
                             g = lambda x: x.sort_values().iloc[-10:].mean() ## Average on 10 largest elements
                             print(df.groupby('continent').risk_i.apply(g).sort_values(ascending=False), file=f)
 
-                            df = tmp_travel[10].query("Origin == 'WUH'")
-                            df = df.drop(['lower', 'upper', 'origin_lon', 'origin_lat', 'dest_lon', 'dest_lat', 'Origin', 'risk_i'], axis=1)
-                            df = df.sort_values('risk_ij', ascending=False)
-                            df = loaders.desc_from_iata_code(df, 'Dest').set_index('Dest', drop=True)
-                            df.to_csv(f'./tables/risks_from_wuhan_wuhan{wuhan_R0}_kappa{kappa}.csv')
+                        df = tmp_travel[10].query("Origin == 'WUH'")
+                        df = df.drop(['lower', 'upper', 'origin_lon', 'origin_lat', 'dest_lon', 'dest_lat', 'Origin', 'risk_i'], axis=1)
+                        df = df.sort_values('risk_ij', ascending=False)
+                        df = loaders.desc_from_iata_code(df, 'Dest').set_index('Dest', drop=True)
+                        df.to_csv(f'./tables/risks_from_wuhan_wuhan{wuhan_R0}_kappa{kappa}.csv')
 
+                        
+                        df = tmp_travel[10]
+                        df = loaders.desc_from_iata_code(df, 'Dest', prefix='dest_')
+                        df = df.sort_values('risk_ij', ascending=False).reset_index(drop=True)
+                        df.to_csv(f'./tables/TableS3.csv')
+                        
                                                         
 if __name__ == '__main__':
     try:

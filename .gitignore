@@ -8,3 +8,7 @@ tables/*
 china_infections
 .ipynb_checkpoints
 __*
+*.pdf
+*.log
+*.aux
+*.docx

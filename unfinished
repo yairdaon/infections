@@ -2,9 +2,12 @@ make sure averaging is good - proper squares (long/lat), radii. DONE
 ignore seas in density calculations (and other areas with zero density). DONE
 raise letter location - DONE
 increase letter size - DONE
-cut antarctia - TBD
+cut antarctia - DONE
 letter color black - DONE
 arrange dropbox - DONE
 csv of all airports w flights from wuhan with p_outbreak P_ij density etc. DONE
 change risks to depend on population size - DONE
 add credit in ref to opendata.com for airport data
+add refrence to code in github
+find title
+add title to cover letter and upload

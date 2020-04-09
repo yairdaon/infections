@@ -31,7 +31,7 @@ def get_destinations_dict(valid):
     return dest_dict
 
 
-def desc_from_iata_code(data, col):
+def desc_from_iata_code(data, col, prefix=''):
     '''get data from https://ourairports.com/data/'''
     df = pd.read_csv('./data/airports.csv', keep_default_na=False)
     df = df.loc[~pd.isnull(df.iata_code)]
@@ -40,11 +40,11 @@ def desc_from_iata_code(data, col):
     region = dict(zip(df.iata_code, df.iso_region))
     continent = dict(zip(df.iata_code, df.continent))
 
-    return data.assign(municipality=data[col].map(muni),
-                       name=data[col].map(name),
-                       region=data[col].map(region),
-                       continent=data[col].map(continent))
-
+    new_cols = {prefix + 'municipality': data[col].map(muni),
+                prefix + 'name': data[col].map(name),
+                prefix + 'region': data[col].map(region),
+                prefix + 'continent': data[col].map(continent)}
+    return data.assign(**new_cols)
     
 def process(n, filename):
     line = gl(filename, n).replace('\n','').split(' ')
@@ -124,11 +124,11 @@ def augment_travel(travel, airports, destinations=None, p_basal=P_BASAL):
     airport_p_no_outbreak = dict(zip(airports.index, airports.p_no_outbreak_from_one))
     if destinations is not None:
         travel = travel.query("Dest in @destinations")
-    p_no_outbreak_from_one = travel.Dest.replace(airport_p_no_outbreak)
-    p_no_outbreak = np.power(1 - p_basal * (1-p_no_outbreak_from_one), travel.Prediction) ## Per origin and destination
-    travel = travel.assign(p_no_outbreak=p_no_outbreak.clip(0,1))
-    travel['risk_ij'] = 1 - p_no_outbreak
-    travel['risk_i'] = 1 - travel.groupby('Origin').p_no_outbreak.transform('prod')
+    dest_p_no_outbreak_from_one = travel.Dest.replace(airport_p_no_outbreak)
+    dest_p_no_outbreak = np.power(1 - p_basal * (1-dest_p_no_outbreak_from_one), travel.Prediction) ## Per origin and destination
+    travel = travel.assign(dest_p_no_outbreak=dest_p_no_outbreak.clip(0,1))
+    travel['risk_ij'] = 1 - dest_p_no_outbreak
+    travel['risk_i'] = 1 - travel.groupby('Origin').dest_p_no_outbreak.transform('prod')
     assert np.all(travel.risk_i.values >= 0) and np.all(travel.risk_i.values <= 1) 
     return travel
     
