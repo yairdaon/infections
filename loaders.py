@@ -38,7 +38,7 @@ def desc_from_iata_code(data, col, prefix=''):
     muni = dict(zip(df.iata_code, df.municipality))
     name = dict(zip(df.iata_code, df.name))
     region = dict(zip(df.iata_code, df.iso_region))
-    continent = dict(zip(df.iata_code, df.continent))
+    continent = dict(zip(df.iata_code, df.continent.fillna('NA')))
 
     new_cols = {prefix + 'municipality': data[col].map(muni),
                 prefix + 'name': data[col].map(name),
@@ -151,7 +151,7 @@ if __name__ == '__main__':
         assert abs(p-p_eps) < 1e-5, str(p) + '   ' + str(p_eps) 
     for kappa, R in zip(kappas, Rs):
         p = p_no_outbreak(kappa)(R)
-        print(f'P(no outbreak|R={R}, kappa={int(kappa)}) = {p:2.3f}') 
+        print(f'P(no outbreak|R0={R}, kappa={int(kappa)}) = {p:2.3f}') 
 
 
 

@@ -84,7 +84,7 @@ def main(debug: ("Debug mode", 'flag', 'd'),
                     df = tmp_travel[10][['Origin', 'risk_i']].drop_duplicates()
                     df = df.sort_values('risk_i', ascending=False)
                     df = loaders.desc_from_iata_code(df, 'Origin').set_index('Origin', drop=True)
-                    df.to_csv(f'./tables/TableS1.csv')
+                    df.to_csv(f'./tables/{region}_risks.csv')
 
                     if region == 'global':
                         with open('./tables/percentiles.txt', 'a') as f:
