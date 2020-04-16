@@ -150,12 +150,13 @@ def plot_rep_risks(df, kappa=1, wuhan_R0=3, region='global'):
                color = plasma(norm(df.risk_i)),
                s=DOT_SIZE)
     _add_features(ax, region=region)
-    
+    plt.tight_layout()
+
+    plt.savefig(f'./pix/{region}/risks_rep_wuhan{wuhan_R0}_kappa{kappa}.jpg', quality=QUALITY, dpi=DPI)
     if kappa==1 and wuhan_R0==3:
         _annotate(ax, text='b', color='k', region=region)
-
-    plt.tight_layout()
-    plt.savefig(f'./pix/{region}/risks_rep_wuhan{wuhan_R0}_kappa{kappa}.jpg', quality=QUALITY, dpi=DPI)
+        plt.savefig(f'./pix/{region}/risks_rep_wuhan{wuhan_R0}_kappa{kappa}_main.jpg', quality=QUALITY, dpi=DPI)
+            
     plt.close('all')
 
     
