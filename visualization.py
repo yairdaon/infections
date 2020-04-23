@@ -2,20 +2,21 @@ import numpy as np
 from scipy.optimize import fsolve
 import matplotlib as mpl
 from matplotlib import pyplot as plt
-from matplotlib.cm import  gray, plasma 
+from matplotlib.cm import  gray
+from matplotlib.cm import plasma_r as cmap  
 from matplotlib import gridspec
 import pdb
 from functools import partial
 import os
-mpl.rcParams['axes.linewidth'] = 0.1 #set the value globally
-
+mpl.rcParams['axes.linewidth'] = 0.05 #set the value globally
 
 from cartopy import config
 import cartopy.crs as ccrs
 import cartopy.feature as cfeature
 
-
 import loaders
+from constants import *
+
 
 for lib in ['pix']:
     if not os.path.exists(f'./{lib}'):
@@ -29,46 +30,14 @@ for lib in ['pix']:
 if not os.path.exists(f'./tables'):
     os.mkdir(f'./tables')
 
-################ Constants #############################    
-airport_list = ['JFK', 'EWR', 'LGA', #NYC
-                #'PUQ', ## Shithole in south Chile
-                #'HNL', # Hawaii
-                'NRT', 'HND',# Tokyo
-                #'FRA', #Frankfurt
-                'CPT', # Capetown
-                'KEF', 'RKV', # Reykjavik Iceland
-                'EZE', ## Buenos aires
-                'SCL', ## Santiago Chile
-                #'TLV', 'SDV', 
-                'WUH', #Wuhan
-                'ICN', # Seoul
-                'DEL', # New Delhi
-                #'CDG', 'ORY', #Paris
-                'LTN', 'LHR', 'LGW', #London
-                'TXL', 'SXF', #Berlin
-                #'SFO', 'SJC', 'OAK', #San Francisco
-                #'MIA', 'FLL' #Miami
-               ]
-XLIMS={'global':[-180,180],
-       'africa':[-100,160],
-       'india':[-90,145]}
-YLIM=[-90+36,90-6]
-MAP_SIZE = np.array([20, 10])
-H_CB_SIZE=(20,2)
-V_CB_SIZE=(2,20)
-TICK_FONT_SIZE=22
-QUALITY=95
-DPI=200
-DOT_SIZE=30
-VMAX = {'global': 0.75, 'africa': 0.1, 'india': 0.5}
-
+opacity_scaler = lambda x, s: np.maximum(np.arctan(1/(1-x)**s - 1/x**s) / np.pi + 0.5, 0.005)
 
 def _add_features(ax, region='global'):
     ax.set_ylim(*YLIM)
     ax.set_xlim(*XLIMS[region])
-    ax.add_feature(cfeature.BORDERS)
-    ax.add_feature(cfeature.STATES)
-    ax.add_feature(cfeature.COASTLINE)
+    ax.add_feature(cfeature.BORDERS, linewidth=0.5)
+    ax.add_feature(cfeature.STATES, linewidth=0.5)
+    ax.add_feature(cfeature.COASTLINE, linewidth=0.5)
     ax.set_xticklabels([])
     ax.set_yticklabels([])
     return ax
@@ -85,8 +54,8 @@ def plot_monthly_risks(travel, kappa=1, wuhan_R0=3, region='global'):
         
         ax.scatter(df.origin_lon,
                    df.origin_lat,
-                   color=plasma(norm(df.risk_i)),
-                   s=DOT_SIZE)
+                   color=cmap(norm(df.risk_i)),
+                   s=(DOT_SIZE*norm(df.risk_i)**2))
         _add_features(ax)
         _annotate(ax, text=month, color='k', region='global')
        
@@ -121,8 +90,8 @@ def plot_airport_risks(df, wuhan_R0=3, kappa=1):
     norm = mpl.colors.Normalize(vmin=0, vmax=0.5, clip=True)
     ax.scatter(df.Lon, 
                df.Lat,
-               color = plasma(norm(df.p_outbreak_from_one)),
-               s=DOT_SIZE)
+               color = cmap(norm(df.p_outbreak_from_one)),
+               s=(DOT_SIZE*df.p_outbreak_from_one)**2)
     _add_features(ax)
     plt.tight_layout()
     plt.savefig(f'./pix/airports_p_outbreak_from_one_wuhan{wuhan_R0}_kappa{kappa}.jpg', quality=QUALITY, dpi=DPI)
@@ -132,7 +101,7 @@ def plot_airport_risks(df, wuhan_R0=3, kappa=1):
     fig = plt.figure(figsize=H_CB_SIZE)
     ax = fig.add_subplot()
     ax.yaxis.set_tick_params(labelsize=20)    
-    sm = plt.cm.ScalarMappable(cmap=plasma, norm=norm)
+    sm = plt.cm.ScalarMappable(cmap=cmap, norm=norm)
     sm._A = []
     cbar = plt.colorbar(sm, orientation='horizontal', cax=ax)
     cbar.ax.tick_params(labelsize=35) 
@@ -147,8 +116,8 @@ def plot_rep_risks(df, kappa=1, wuhan_R0=3, region='global'):
     norm = mpl.colors.Normalize(vmin=0, vmax=VMAX[region], clip=True)
     ax.scatter(df.origin_lon, 
                df.origin_lat,
-               color = plasma(norm(df.risk_i)),
-               s=DOT_SIZE)
+               color = cmap(norm(df.risk_i)),
+               s=(DOT_SIZE*norm(df.risk_i))**2)
     _add_features(ax, region=region)
     plt.tight_layout()
 
@@ -167,7 +136,7 @@ def plot_cb(orientation='horizontal', region='global'):
         fig = plt.figure(figsize=V_CB_SIZE)
     norm = mpl.colors.Normalize(vmin=0, vmax=VMAX[region], clip=True)
     ax = fig.add_subplot(1, 1, 1)
-    sm = plt.cm.ScalarMappable(cmap=plasma, norm=norm)
+    sm = plt.cm.ScalarMappable(cmap=cmap, norm=norm)
     sm._A = []
     cbar = plt.colorbar(sm, orientation=orientation, cax=ax)
     cbar.ax.tick_params(labelsize=35) 
@@ -176,7 +145,7 @@ def plot_cb(orientation='horizontal', region='global'):
     plt.close('all')
 
     
-def plot_geodesics(df, destinations, region):
+def plot_geodesics(df, destinations, region, opacity_s=0.7):
     print("Plotting geodesics")
     df = df.query('Dest in @destinations')
     fig = plt.figure(figsize=MAP_SIZE)
@@ -194,7 +163,7 @@ def plot_geodesics(df, destinations, region):
                      df[['origin_lat', 'dest_lat']].T, 
                      color='r',
                      transform=ccrs.Geodetic())
-    [line.set_alpha(alpha) for alpha, line in zip(opacity, lines)]
+    [line.set_alpha(opacity_scaler(alpha, opacity_s)) for alpha, line in zip(opacity, lines)]
     
     _annotate(ax, text='a', color='k', region=region)
     _add_features(ax, region=region)
@@ -203,7 +172,6 @@ def plot_geodesics(df, destinations, region):
     plt.savefig(f'./pix/{region}/geodesics.jpg', quality=QUALITY, dpi=DPI)
     plt.close('all')
 
-    
 def plot_airports(airports, density):
     print("Plotting airports")
     vis = airports.loc[airport_list]

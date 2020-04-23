@@ -6,18 +6,19 @@ from unittest.mock import Mock
 
 import loaders
 import geography
-import visualization as vis
-
+import constants 
 
 def main(debug: ("Debug mode", 'flag', 'd'),
          skip_figs: ("Skip making figures", 'flag', 's')):
 
-    # if skip_figs:
-    #     vis = Mock()
-
+    if skip_figs:
+        vis = Mock()
+    else:
+        import visualization as vis
+        
     if debug:
-        vis.DPI = 50
-        vis.QUALITY = 75
+        constants.DPI = 50
+        constants.QUALITY = 75
 
     vis.plot_p_outbreak()
     
@@ -43,9 +44,10 @@ def main(debug: ("Debug mode", 'flag', 'd'),
     print('loading airport data')
     airports = loaders.load_airports(specs)
     if debug:
-        airports = airports.loc[vis.airport_list]
+        airports = airports.loc[constants.airport_list]
 
-    vis.plot_airports(airports, specs['data'])        
+    if not debug: 
+        vis.plot_airports(airports, specs['data'])        
     
     travel = loaders.load_travel(airports)
     months = [1, 4, 7, 10]
