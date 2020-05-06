@@ -5,9 +5,12 @@
 #rm -rvf tables
 #rm data/*.pickle
 
-rm -rvf pix/*
-rm -rvf tables/*
-python3 risks.py ## -s skips figures, -d runs in debug mode
+rm -rvf *pix*
+rm -rvf *tables*
+python3 risks.py -sups 
+mv pix super_pix
+mv tables super_tables
+python3 risks.py ## -skip skips figures, -d runs in debug mode
 
 
 # ## Trim everybody
@@ -35,6 +38,7 @@ convert pix/global/risks_monthly_wuhan3_kappa1.jpg pix/cb_global_horizontal_mont
 convert pix/global/risks_rep_wuhan3_kappa1.jpg pix/global/risks_rep_wuhan3_kappa3.jpg pix/global/risks_rep_wuhan3_kappa6.jpg pix/cb_global_horizontal.jpg -append fig_S2_different_kappas.jpg
 convert pix/global/risks_rep_wuhan2_kappa1.jpg pix/global/risks_rep_wuhan3_kappa1.jpg pix/global/risks_rep_wuhan4_kappa1.jpg pix/cb_global_horizontal.jpg -append fig_S3_different_R0.jpg
 convert pix/airports_p_outbreak_from_one_wuhan3_kappa1.jpg pix/airports_p_outbreak_from_one_wuhan3_kappa1_cb.jpg -append fig_S4_fig_p_outbreak_from_one.jpg
+convert pix/global/risks_rep_wuhan3_kappa1.jpg super_pix/global/risks_rep_wuhan3_kappa1.jpg pix/cb_global_horizontal.jpg -append fig_S5_superspreaders.jpg
 
 
 ## Move images back where they belong

@@ -9,8 +9,15 @@ import geography
 import constants 
 
 def main(debug: ("Debug mode", 'flag', 'd'),
-         skip_figs: ("Skip making figures", 'flag', 's')):
+         superspreaders: ("analysis with super spreaders", 'flag', 'sups'),
+         skip_figs: ("Skip making figures", 'flag', 'skip')):
 
+    if superspreaders:
+        add = ''
+    else:
+        add = 'out'
+    print('\nRunning with' + add + ' super spreaders')
+    
     if skip_figs:
         vis = Mock()
     else:
@@ -40,7 +47,12 @@ def main(debug: ("Debug mode", 'flag', 'd'),
         regions = ['global', 'africa', 'india']
         kappas   = [1, 3, 6]
 
-
+    if superspreaders:
+        kappas = [1]
+        R0s = [3]
+        regions = ['global']
+        
+        
     print('loading airport data')
     airports = loaders.load_airports(specs)
     if debug:
@@ -63,7 +75,7 @@ def main(debug: ("Debug mode", 'flag', 'd'),
         airports['R0'] = airports.density * wuhan_factor
 
         for kappa in kappas:
-            airports['p_no_outbreak_from_one'] = loaders.calculate_p_no_outbreaks(airports, kappa=kappa)
+            airports['p_no_outbreak_from_one'] = loaders.calculate_p_no_outbreaks(airports, kappa=kappa, superspreaders=superspreaders)
             airports['p_outbreak_from_one'] = 1 - airports.p_no_outbreak_from_one
                     
             if wuhan_R0 == 3 and kappa == 1:

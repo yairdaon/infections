@@ -87,7 +87,7 @@ def plot_monthly_risks(travel, kappa=1, wuhan_R0=3, region='global'):
 def plot_airport_risks(df, wuhan_R0=3, kappa=1):
     fig = plt.figure(figsize=MAP_SIZE)
     ax = fig.add_subplot(1, 1, 1, projection=ccrs.PlateCarree())
-    norm = mpl.colors.Normalize(vmin=0, vmax=0.5, clip=True)
+    norm = mpl.colors.Normalize(vmin=0, vmax=1, clip=True)
     ax.scatter(df.Lon, 
                df.Lat,
                color = cmap(norm(df.p_outbreak_from_one)),

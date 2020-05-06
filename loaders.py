@@ -20,6 +20,37 @@ def p_no_outbreak(kappa):
     else:
         return lambda R: np.minimum(1/R, 1)
 
+def p_no_outbreak_superspreaders(R0,
+                                 alpha=0.01,
+                                 factor=5,
+                                 gamma=1/7):
+    '''alpha is the fraction of population which is a super spreader
+    factor is the increase in infectivity for a super spreader 
+    gamma is the infection period (???)  
+    beta is the number of days an individual is infected until removal from population (???)
+    overall, R0 = beta / gamma
+    '''
+    beta = R0 * gamma
+    def f(x, alpha, factor, gamma, beta):
+        beta1 = factor * beta
+        beta2 = beta
+        y = np.zeros(2)
+
+        rat1 = beta1 / (beta1 + gamma)
+        res1 = gamma / (beta1 + gamma)
+        y[0] = rat1 * (alpha * x[0]**2 + (1-alpha) * x[0]*x[1]) + res1 - x[0]
+
+        rat2 = beta2 / (beta2 + gamma)
+        res2 = gamma / (beta2 + gamma)
+        y[1] = rat2 * (alpha * x[0]*x[1] + (1-alpha) * x[1]**2) + res2 - x[1]
+        return y
+
+    np.random.seed(19) ## For reproducibility
+    x0s = np.random.uniform(size=(10,2))
+    solutions = [fsolve(f, x0=x0, args=(alpha, factor, gamma, beta)) for x0 in x0s]
+    solutions = [alpha * x[0] + (1-alpha) * x[1] for x in solutions]
+    return np.min(solutions)
+
     
 def get_destinations_dict(valid):
     '''get data from https://ourairports.com/data/'''
@@ -125,7 +156,7 @@ def augment_travel(travel, airports, destinations=None, p_basal=P_BASAL):
     if destinations is not None:
         travel = travel.query("Dest in @destinations")
     dest_p_no_outbreak_from_one = travel.Dest.replace(airport_p_no_outbreak)
-    dest_p_no_outbreak = np.power(1 - p_basal * (1-dest_p_no_outbreak_from_one), travel.Prediction) ## Per origin and destination
+    dest_p_no_outbreak = np.power(1 - p_basal * (1-dest_p_no_outbreak_from_one), travel.Prediction) ## Per origin and destination 
     travel = travel.assign(dest_p_no_outbreak=dest_p_no_outbreak.clip(0,1))
     travel['risk_ij'] = 1 - dest_p_no_outbreak
     travel['risk_i'] = 1 - travel.groupby('Origin').dest_p_no_outbreak.transform('prod')
@@ -133,10 +164,15 @@ def augment_travel(travel, airports, destinations=None, p_basal=P_BASAL):
     return travel
     
 
-def calculate_p_no_outbreaks(airports, kappa):
+def calculate_p_no_outbreaks(airports, kappa, superspreaders):
     f = p_no_outbreak(kappa)
     if kappa > 1:
         return airports.R0.apply(f)
+
+    elif superspreaders:
+        f = p_no_outbreak_superspreaders
+        return airports.R0.apply(f)
+
     else:
         return f(airports.R0)
 
@@ -144,7 +180,7 @@ if __name__ == '__main__':
     kappas = [1, 1, 1, 1, 1, 2]
     Rs     = [1, 2, 3, 4, 5, 2]
 
-    ## Sanity check
+    print('Sanity check:')
     for R in Rs:
         p = p_no_outbreak(1)(R/3)
         p_eps = p_no_outbreak(1+1e-10)(R/3)
@@ -153,5 +189,10 @@ if __name__ == '__main__':
         p = p_no_outbreak(kappa)(R)
         print(f'P(no outbreak|R0={R}, kappa={int(kappa)}) = {p:2.3f}') 
 
-
-
+    alpha = .01
+    factor = 5
+    beta = 3/7
+    gamma = 1/7
+    for _ in range(15):
+        p = p_superspreaders(alpha=alpha, factor=5)
+        print(f'P(no outbreak|alpha={alpha}, factor={factor:2.3f}, beta={beta:2.3f}, gamma={gamma:2.3f}) = {p:2.3f}') 
