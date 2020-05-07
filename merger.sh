@@ -7,9 +7,6 @@
 
 rm -rvf *pix*
 rm -rvf *tables*
-python3 risks.py -sups 
-mv pix super_pix
-mv tables super_tables
 python3 risks.py ## -skip skips figures, -d runs in debug mode
 
 
@@ -37,11 +34,12 @@ convert pix/cb_global_horizontal.jpg -resize 3952x337 pix/cb_global_horizontal_m
 convert pix/global/risks_monthly_wuhan3_kappa1.jpg pix/cb_global_horizontal_months.jpg -append fig_S1_monthly.jpg
 convert pix/global/risks_rep_wuhan3_kappa1.jpg pix/global/risks_rep_wuhan3_kappa3.jpg pix/global/risks_rep_wuhan3_kappa6.jpg pix/cb_global_horizontal.jpg -append fig_S2_different_kappas.jpg
 convert pix/global/risks_rep_wuhan2_kappa1.jpg pix/global/risks_rep_wuhan3_kappa1.jpg pix/global/risks_rep_wuhan4_kappa1.jpg pix/cb_global_horizontal.jpg -append fig_S3_different_R0.jpg
-convert pix/global/risks_rep_wuhan3_kappa1.jpg super_pix/global/risks_rep_wuhan3_kappa1.jpg pix/cb_global_horizontal.jpg -append fig_S4_superspreaders.jpg
+convert pix/global/risks_rep_wuhan3_kappa1.jpg pix/global/risks_rep_wuhan3_kappasuperspreaders.jpg pix/cb_global_horizontal.jpg -append fig_S4_superspreaders.jpg
 convert pix/airports_p_outbreak_from_one_wuhan3_kappa1.jpg pix/airports_p_outbreak_from_one_wuhan3_kappa1_cb.jpg -append fig_S5_fig_p_outbreak_from_one.jpg
 
 
 ## Move images back where they belong
 mv fig*.jpg pix/
-rm -rvf **/**/*~
 mv tables/global_risks.csv tables/TableS1.csv
+rm -rvf **/*~
+rm pix/*cb*.jpg*

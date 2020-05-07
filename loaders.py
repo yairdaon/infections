@@ -14,13 +14,18 @@ P_BASAL = 1e-6 ## Assumed frequency of Corona in entire population
 
 f = lambda p, kappa, R: (1-p) * np.power(1 + p * R / kappa, kappa) - 1
 def p_no_outbreak(kappa):
-    if kappa > 1:
+    if kappa == 'superspreaders':
+        return p_no_outbreak_superspreaders
+    elif kappa == 1:
+        return lambda R: np.minimum(1/R, 1)
+    elif kappa > 1:
         ##               1 - P(major outbreak introducing one infected individual   )
         return lambda R: 1 - (fsolve(lambda p: f(p, kappa, R), x0=np.array(0.99))[0])
     else:
-        return lambda R: np.minimum(1/R, 1)
+        raise ValueError('Invalid kappa.')
 
-def p_no_outbreak_superspreaders(R0,
+    
+def p_no_outbreak_superspreaders(R,
                                  alpha=0.01,
                                  factor=5,
                                  gamma=1/7):
@@ -30,7 +35,7 @@ def p_no_outbreak_superspreaders(R0,
     beta is the number of days an individual is infected until removal from population (???)
     overall, R0 = beta / gamma
     '''
-    beta = R0 * gamma
+    beta = R * gamma
     def f(x, alpha, factor, gamma, beta):
         beta1 = factor * beta
         beta2 = beta
@@ -164,17 +169,14 @@ def augment_travel(travel, airports, destinations=None, p_basal=P_BASAL):
     return travel
     
 
-def calculate_p_no_outbreaks(airports, kappa, superspreaders):
+def calculate_p_no_outbreaks(airports, kappa):
     f = p_no_outbreak(kappa)
-    if kappa > 1:
-        return airports.R0.apply(f)
-
-    elif superspreaders:
-        f = p_no_outbreak_superspreaders
-        return airports.R0.apply(f)
-
-    else:
+    if kappa == 1:
         return f(airports.R0)
+    else:
+        return airports.R0.apply(f)
+
+
 
 if __name__ == '__main__':
     kappas = [1, 1, 1, 1, 1, 2]
