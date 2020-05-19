@@ -62,8 +62,15 @@ def get_destinations_dict(valid):
     destinations = pd.read_csv('./data/airports.csv')
     dest_dict = {}
     dest_dict['africa'] = np.intersect1d(valid, destinations.query('continent == "AF"').iata_code.dropna().unique())
+    dest_dict['europe'] = np.intersect1d(valid, destinations.query('continent == "EU"').iata_code.dropna().unique())
+    dest_dict['russia'] = np.intersect1d(valid, destinations.query('iso_country == "RU"').iata_code.dropna().unique())
+    dest_dict['usa']    = np.intersect1d(valid, destinations.query('iso_country == "US"').iata_code.dropna().unique())
+    dest_dict['brazil'] = np.intersect1d(valid, destinations.query('iso_country == "BR"').iata_code.dropna().unique())
+    #dest_dict['israel'] = np.intersect1d(valid, destinations.query('iso_country == "IL"').iata_code.dropna().unique())
     dest_dict['india']  = np.intersect1d(valid, destinations.query('iso_country == "IN"').iata_code.dropna().unique())
+    dest_dict['china']  = np.intersect1d(valid, destinations.query('iso_country == "CN"').iata_code.dropna().unique())
     dest_dict['global'] = valid
+
     return dest_dict
 
 
@@ -116,7 +123,7 @@ def load_airports(specs):
 
     filename = './data/AirportInfo.csv'
     pick_name = filename.replace('csv', 'pickle')
-    if os.path.exists(pick_name) and False:
+    if os.path.exists(pick_name):
         with open(pick_name,'rb') as f:
             airports = pickle.load(f)
     else:

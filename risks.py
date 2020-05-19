@@ -32,12 +32,12 @@ def main(debug: ("Debug mode", 'flag', 'd'),
 
     if debug:
         R0s = [3]
-        regions = ['global', 'africa', 'india']
-        kappas = [1, 'superspreaders']
+        regions = ['global'] #constants.ALL_REGIONS
+        kappas = [1]
     
     else:
         R0s = [2, 3, 4]
-        regions = ['global', 'africa', 'india']
+        regions = constants.ALL_REGIONS
         kappas   = [1, 3, 6, 'superspreaders']
         
         

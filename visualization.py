@@ -21,12 +21,15 @@ from constants import *
 for lib in ['pix']:
     if not os.path.exists(f'./{lib}'):
         os.mkdir(f'./{lib}')
-    if not os.path.exists(f'./{lib}/africa'):
-        os.mkdir(f'./{lib}/africa')
-    if not os.path.exists(f'./{lib}/india'):
-        os.mkdir(f'./{lib}/india')
-    if not os.path.exists(f'./{lib}/global'):
-        os.mkdir(f'./{lib}/global')
+    for region in XLIMS.keys():
+        path = f'./{lib}/{region}'
+        if not os.path.exists(path):
+            os.mkdir(path)
+    # if not os.path.exists(f'./{lib}/india'):
+    #     os.mkdir(f'./{lib}/india')
+    # if not os.path.exists(f'./{lib}/global'):
+    #     os.mkdir(f'./{lib}/global')
+        
 if not os.path.exists(f'./tables'):
     os.mkdir(f'./tables')
 
@@ -49,7 +52,7 @@ def _annotate(ax, text, color, region):
     
     
 def plot_monthly_risks(travel, kappa=1, wuhan_R0=3, region='global'):
-    norm = mpl.colors.Normalize(vmin=0, vmax=VMAX[region], clip=True)
+    norm = mpl.colors.Normalize(vmin=0, vmax=VMAX.get(region, 0.75), clip=True)
     def make_it(ax, df, month):
         
         ax.scatter(df.origin_lon,
@@ -113,7 +116,7 @@ def plot_airport_risks(df, wuhan_R0=3, kappa=1):
 def plot_rep_risks(df, kappa=1, wuhan_R0=3, region='global'):
     fig = plt.figure(figsize=MAP_SIZE)
     ax = fig.add_subplot(1, 1, 1, projection=ccrs.PlateCarree())
-    norm = mpl.colors.Normalize(vmin=0, vmax=VMAX[region], clip=True)
+    norm = mpl.colors.Normalize(vmin=0, vmax=VMAX.get(region, 0.75), clip=True)
     ax.scatter(df.origin_lon, 
                df.origin_lat,
                color = cmap(norm(df.risk_i)),
@@ -134,14 +137,14 @@ def plot_cb(orientation='horizontal', region='global'):
         fig = plt.figure(figsize=H_CB_SIZE)
     else:
         fig = plt.figure(figsize=V_CB_SIZE)
-    norm = mpl.colors.Normalize(vmin=0, vmax=VMAX[region], clip=True)
+    norm = mpl.colors.Normalize(vmin=0, vmax=VMAX.get(region, 0.75), clip=True)
     ax = fig.add_subplot(1, 1, 1)
     sm = plt.cm.ScalarMappable(cmap=cmap, norm=norm)
     sm._A = []
     cbar = plt.colorbar(sm, orientation=orientation, cax=ax)
     cbar.ax.tick_params(labelsize=35) 
     plt.tight_layout()
-    plt.savefig(f'./pix/cb_{region}_{orientation}.jpg', quality=QUALITY, dpi=DPI)
+    plt.savefig(f'./pix/cb_{orientation}_{region}.jpg', quality=QUALITY, dpi=DPI)
     plt.close('all')
 
     
