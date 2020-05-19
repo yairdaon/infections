@@ -18,9 +18,12 @@ airport_list = ['JFK', 'EWR', 'LGA', #NYC
                 #'SFO', 'SJC', 'OAK', #San Francisco
                 #'MIA', 'FLL' #Miami
                ]
+
 XLIMS={'global':[-180,180],
        'africa':[-100,160],
-       'india':[-90,145]}
+       'india':[-20,145]}
+
+
 YLIM=[-90+36,90-6]
 MAP_SIZE = np.array([20, 10])
 H_CB_SIZE=(20,2)

@@ -116,7 +116,7 @@ def load_airports(specs):
 
     filename = './data/AirportInfo.csv'
     pick_name = filename.replace('csv', 'pickle')
-    if os.path.exists(pick_name):
+    if os.path.exists(pick_name) and False:
         with open(pick_name,'rb') as f:
             airports = pickle.load(f)
     else:

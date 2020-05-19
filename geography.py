@@ -5,7 +5,12 @@ import pdb
 
 RADIUS = 6371
 
-
+def remove_outside_disc(arr, horz_window, vert_window):
+    X, Y = np.meshgrid(np.arange(-horz_window,horz_window+1), np.arange(-vert_window, vert_window+1))
+    inds = Y**2/vert_window**2 + X**2/horz_window**2 > 1
+    arr[inds] = 0
+    return arr
+    
 def deg_dist_at_lat(lat): ## Latitude in degrees!
     assert lat >= -90 and lat <= 90
     return math.cos(lat * 2 * math.pi / 360) * RADIUS * 2 * math.pi / 360
@@ -67,8 +72,7 @@ def augment(lon, lat, specs, scan=65, avg=15): #resolution in degrees
     col_ran = np.mod(np.arange(col-horz_window,col+horz_window+1), n_cols).astype(int)
     assert len(row_ran) == 2*vert_window + 1
     assert len(col_ran) == 2*horz_window + 1
-    tmp = data[row_ran, :][:, col_ran]
-
+    tmp = remove_outside_disc(data[row_ran, :][:, col_ran], horz_window, vert_window) 
     shape = tmp.shape
     assert tmp.shape == (2*vert_window+1, 2*horz_window+1), f'({2*vert_window+1}, {2*horz_window+1} != {shape}'
     idx = np.unravel_index(np.argmax(tmp), tmp.shape)
@@ -89,13 +93,13 @@ def augment(lon, lat, specs, scan=65, avg=15): #resolution in degrees
     vert_window_avg = int(avg / vert_pixel)
     row_ran = np.mod(np.arange(row_max-vert_window_avg,row_max+vert_window_avg+1), n_rows).astype(int)
     col_ran = np.mod(np.arange(col_max-horz_window_avg,col_max+horz_window_avg+1), n_cols).astype(int)
-    tmp = data[row_ran, :][:, col_ran]
+    tmp = remove_outside_disc(data[row_ran, :][:, col_ran], horz_window_avg, vert_window_avg)
     tmp = tmp[tmp > 0]
     if len(tmp) == 0:
         density = 0
     else:
         density = np.mean(tmp)
-   
+    
     
     ret = {
         'row': row,
