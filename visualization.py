@@ -5,6 +5,7 @@ from matplotlib import pyplot as plt
 from matplotlib.cm import  gray
 from matplotlib.cm import plasma_r as cmap  
 from matplotlib import gridspec
+import matplotlib.patches as mpatches
 import pdb
 from functools import partial
 import os
@@ -39,7 +40,7 @@ def _add_features(ax, region='global'):
     ax.set_ylim(*YLIM)
     ax.set_xlim(*XLIMS[region])
     ax.add_feature(cfeature.BORDERS, linewidth=0.5)
-    ax.add_feature(cfeature.STATES, linewidth=0.5)
+    #ax.add_feature(cfeature.STATES, linewidth=0.5)
     ax.add_feature(cfeature.COASTLINE, linewidth=0.5)
     ax.set_xticklabels([])
     ax.set_yticklabels([])
@@ -156,27 +157,31 @@ def plot_geodesics(df, destinations, region, opacity_s=0.7):
     plateCr._threshold = plateCr._threshold/10.
     ax = plt.axes(projection=plateCr)
 
-    ## Add FSI
+    ## Plot FSI ###########
     cm = plt.cm.winter
     shp = shpreader.natural_earth(resolution='10m',category='cultural',
                                   name='admin_0_countries')
     reader = shpreader.Reader(shp)
     for n in reader.records():
         
-        fsi, _ = geography.get_fsi(n, FSI_DF)
+        fsi, name = geography.get_fsi(n, FSI_DF)
         
         if fsi is None:
             continue
 
-        fsi = min(max(fsi-20, 0), 100)
-        if fsi < 25:
-            clr = cm(0)#'green'
-        elif fsi >= 25 and fsi < 50:
-            clr = cm(0.33)#'purple'
-        elif fsi >= 50 and fsi < 75:
-            clr = cm(0.66)#'blue'
+        handles = []
+        if fsi < 30:
+            clr = cm(0)
+            handles.append(mpatches.Patch(color=clr, label='Sustainable'))
+        elif fsi >= 30 and fsi < 60:
+            clr = cm(0.33)
+            handles.append(mpatches.Patch(color=clr, label='Stable'))
+        elif fsi >= 60 and fsi < 90:
+            clr = cm(0.66)
+            handles.append(mpatches.Patch(color=clr, label='Warning'))
         else:
-            clr = cm(1)#'red'
+            clr = cm(0.99)
+            handles.append(mpatches.Patch(color=clr, label='Alert'))
         try:
             ax.add_geometries(n.geometry, ccrs.PlateCarree(), facecolor=clr, 
                               alpha = 0.5, linewidth =0.15, edgecolor = "black",
@@ -186,7 +191,11 @@ def plot_geodesics(df, destinations, region, opacity_s=0.7):
                               alpha = 0.5, linewidth =0.15, edgecolor = "black",
                               label=n.attributes['ADM0_A3'])
 
+        plt.legend(handles=handles)
 
+
+
+    ## Plot Geodesix ###########
     if region == 'global':
         cutoff = 0.005
     else:
