@@ -1,4 +1,6 @@
 import numpy as np
+import pandas as pd
+
 airport_list = ['JFK', 'EWR', 'LGA', #NYC
                 #'PUQ', ## Shithole in south Chile
                 #'HNL', # Hawaii
@@ -47,3 +49,8 @@ VMAX = {'global': 0.75,
         'russia': 0.07,
         'usa': 0.15,
         'china': 0.67}
+
+
+process = lambda x: x.replace('the','').replace('of','').replace(' ','').replace('-','').lower()
+FSI_DF = pd.read_csv('./data/FSI2020.csv')
+FSI_DF.index = FSI_DF.name.apply(process)

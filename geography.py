@@ -2,15 +2,32 @@ import numpy as np
 import math
 import pdb
 
+from constants import process
 
 RADIUS = 6371
+
+def get_fsi(record, df):
+    name_long = process(record.attributes['NAME_LONG'])
+    name_short = process(record.attributes['NAME'])
+    if name_long in df.index:
+        fsi = df.loc[name_long]['fragileIndexScore']
+        name = record.attributes['NAME_LONG']
+    elif name_short in df.index:
+        fsi = df.loc[name_short]['fragileIndexScore']
+        name = record.attributes['NAME_LONG']
+    else:
+        fsi = None
+        name = None
+    return fsi, name
+
 
 def remove_outside_disc(arr, horz_window, vert_window):
     X, Y = np.meshgrid(np.arange(-horz_window,horz_window+1), np.arange(-vert_window, vert_window+1))
     inds = Y**2/vert_window**2 + X**2/horz_window**2 > 1
     arr[inds] = 0
     return arr
-    
+
+
 def deg_dist_at_lat(lat): ## Latitude in degrees!
     assert lat >= -90 and lat <= 90
     return math.cos(lat * 2 * math.pi / 360) * RADIUS * 2 * math.pi / 360

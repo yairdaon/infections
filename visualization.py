@@ -13,9 +13,11 @@ mpl.rcParams['axes.linewidth'] = 0.05 #set the value globally
 from cartopy import config
 import cartopy.crs as ccrs
 import cartopy.feature as cfeature
+import cartopy.io.shapereader as shpreader
 
 import loaders
 from constants import *
+import geography
 
 
 for lib in ['pix']:
@@ -25,15 +27,13 @@ for lib in ['pix']:
         path = f'./{lib}/{region}'
         if not os.path.exists(path):
             os.mkdir(path)
-    # if not os.path.exists(f'./{lib}/india'):
-    #     os.mkdir(f'./{lib}/india')
-    # if not os.path.exists(f'./{lib}/global'):
-    #     os.mkdir(f'./{lib}/global')
-        
+
+            
 if not os.path.exists(f'./tables'):
     os.mkdir(f'./tables')
 
 opacity_scaler = lambda x, s: np.maximum(np.arctan(1/(1-x)**s - 1/x**s) / np.pi + 0.5, 0.005)
+
 
 def _add_features(ax, region='global'):
     ax.set_ylim(*YLIM)
@@ -155,8 +155,38 @@ def plot_geodesics(df, destinations, region, opacity_s=0.7):
     plateCr = ccrs.PlateCarree()
     plateCr._threshold = plateCr._threshold/10.
     ax = plt.axes(projection=plateCr)
-    
-    #mx = df.Prediction.max()
+
+    ## Add FSI
+    cm = plt.cm.winter
+    shp = shpreader.natural_earth(resolution='10m',category='cultural',
+                                  name='admin_0_countries')
+    reader = shpreader.Reader(shp)
+    for n in reader.records():
+        
+        fsi, _ = geography.get_fsi(n, FSI_DF)
+        
+        if fsi is None:
+            continue
+
+        fsi = min(max(fsi-20, 0), 100)
+        if fsi < 25:
+            clr = cm(0)#'green'
+        elif fsi >= 25 and fsi < 50:
+            clr = cm(0.33)#'purple'
+        elif fsi >= 50 and fsi < 75:
+            clr = cm(0.66)#'blue'
+        else:
+            clr = cm(1)#'red'
+        try:
+            ax.add_geometries(n.geometry, ccrs.PlateCarree(), facecolor=clr, 
+                              alpha = 0.5, linewidth =0.15, edgecolor = "black",
+                              label=n.attributes['ADM0_A3'])
+        except:
+            ax.add_geometries([n.geometry], ccrs.PlateCarree(), facecolor=clr, 
+                              alpha = 0.5, linewidth =0.15, edgecolor = "black",
+                              label=n.attributes['ADM0_A3'])
+
+
     if region == 'global':
         cutoff = 0.005
     else:
