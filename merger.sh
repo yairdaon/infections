@@ -23,6 +23,8 @@ convert pix/cb_horizontal_india.jpg -resize 1769x337 pix/cb_horizontal_india.jpg
 convert pix/cb_horizontal_brazil.jpg -resize 1824x337 pix/cb_horizontal_brazil.jpg
 convert pix/cb_horizontal_russia.jpg -resize 2146x337 pix/cb_horizontal_russia.jpg
 
+convert pix/cb_vertical_india.jpg -resize 353x1480 pix/cb_vertical_india.jpg
+convert pix/cb_vertical_brazil.jpg -resize 353x1479 pix/cb_vertical_brazil.jpg
 
 ## Stack (and trim, even thogh it's not necessary) using imagemagick
 
@@ -32,8 +34,10 @@ do
     convert pix/$region/geodesics.jpg pix/$region/risks_rep_wuhan3_kappa1_main.jpg pix/cb_horizontal_$region.jpg -append fig_$region.jpg
 done
 
-# convert pix/africa/geodesics.jpg pix/africa/risks_rep_wuhan3_kappa1_main.jpg pix/cb_africa_horizontal.jpg -append fig_africa.jpg
-# convert pix/india/geodesics.jpg  pix/india/risks_rep_wuhan3_kappa1_main.jpg  pix/cb_india_horizontal.jpg  -append fig_india.jpg
+for region in brazil india
+do
+    convert pix/$region/geodesics.jpg pix/$region/risks_rep_wuhan3_kappa1_main.jpg pix/cb_vertical_$region.jpg +append fig_vertical_$region.jpg
+done
 
 
 ## Supplementary Figures

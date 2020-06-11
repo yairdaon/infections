@@ -158,40 +158,41 @@ def plot_geodesics(df, destinations, region, opacity_s=0.7):
     ax = plt.axes(projection=plateCr)
 
     ## Plot FSI ###########
-    cm = plt.cm.winter
-    shp = shpreader.natural_earth(resolution='10m',category='cultural',
-                                  name='admin_0_countries')
-    reader = shpreader.Reader(shp)
-    for n in reader.records():
-        
-        fsi, name = geography.get_fsi(n, FSI_DF)
-        
-        if fsi is None:
-            continue
+    if region == 'global':
+        cmap = plt.cm.winter
+        shp = shpreader.natural_earth(resolution='10m',category='cultural',
+                                      name='admin_0_countries')
+        reader = shpreader.Reader(shp)
+        for n in reader.records():
 
-        handles = []
-        if fsi < 30:
-            clr = cm(0)
-            handles.append(mpatches.Patch(color=clr, label='Sustainable'))
-        elif fsi >= 30 and fsi < 60:
-            clr = cm(0.33)
-            handles.append(mpatches.Patch(color=clr, label='Stable'))
-        elif fsi >= 60 and fsi < 90:
-            clr = cm(0.66)
-            handles.append(mpatches.Patch(color=clr, label='Warning'))
-        else:
-            clr = cm(0.99)
-            handles.append(mpatches.Patch(color=clr, label='Alert'))
-        try:
-            ax.add_geometries(n.geometry, ccrs.PlateCarree(), facecolor=clr, 
-                              alpha = 0.5, linewidth =0.15, edgecolor = "black",
-                              label=n.attributes['ADM0_A3'])
-        except:
-            ax.add_geometries([n.geometry], ccrs.PlateCarree(), facecolor=clr, 
-                              alpha = 0.5, linewidth =0.15, edgecolor = "black",
-                              label=n.attributes['ADM0_A3'])
+            fsi, name = geography.get_fsi(n, FSI_DF)
 
-        plt.legend(handles=handles)
+            if fsi is None:
+                clr = 'grey'
+            elif fsi < 30:
+                clr = cmap(0)
+            elif fsi >= 30 and fsi < 60:
+                clr = cmap(0.33)
+            elif fsi >= 60 and fsi < 90:
+                clr = cmap(0.66)
+            else:
+                clr = cmap(0.99)
+            try:
+                ax.add_geometries(n.geometry, ccrs.PlateCarree(), facecolor=clr, 
+                                  alpha = 0.5, linewidth =0.15, edgecolor = "black",
+                                  label=n.attributes['ADM0_A3'])
+            except:
+                ax.add_geometries([n.geometry], ccrs.PlateCarree(), facecolor=clr, 
+                                  alpha = 0.5, linewidth =0.15, edgecolor = "black",
+                                  label=n.attributes['ADM0_A3'])
+
+        # Make legend
+        handles = [mpatches.Patch(color=cmap(0.00), label='Sustainable'),
+                   mpatches.Patch(color=cmap(0.33), label='Stable'),
+                   mpatches.Patch(color=cmap(0.66), label='Warning'),
+                   mpatches.Patch(color=cmap(0.99), label='Alert'),
+                   mpatches.Patch(color='grey',    label='No Data')]
+        plt.legend(handles=handles, loc=6, prop={'size': 20})
 
 
 
